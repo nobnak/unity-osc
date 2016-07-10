@@ -9,10 +9,13 @@ using System.Threading;
 
 namespace Osc {
 	public abstract class OscPort : MonoBehaviour {
+		public enum ReceiveModeEnum { Event = 0, Poll }
+
 		public const int BUFFER_SIZE = 1 << 16;
 		public CapsuleEvent OnReceive;
 		public ExceptionEvent OnError;
 
+		public ReceiveModeEnum receiveMode = ReceiveModeEnum.Event;
 		public int localPort = 0;
 		public string defaultRemoteHost = "localhost";
 		public int defaultRemotePort = 10000;
@@ -23,22 +26,17 @@ namespace Osc {
 		protected Queue<System.Exception> _errors;
 		protected IPEndPoint _defaultRemote;
 
-		protected virtual void OnEnable() {
-			_oscParser = new Parser ();
-			_received = new Queue<Capsule> ();
-			_errors = new Queue<Exception> ();
-			_defaultRemote = new IPEndPoint (FindFromHostName (defaultRemoteHost), defaultRemotePort);
-		}
-		protected virtual void OnDisable() {
-		}
-
-		protected virtual void Update() {
-			lock (_received)
+		public virtual IEnumerable<Capsule> PollReceived() {
+			lock (_received) {
 				while (_received.Count > 0)
-					OnReceive.Invoke (_received.Dequeue ());
-			lock (_errors)
+					yield return _received.Dequeue ();
+			}
+		}
+		public virtual IEnumerable<System.Exception> PollException() {
+			lock (_errors) {
 				while (_errors.Count > 0)
-					OnError.Invoke (_errors.Dequeue ());
+					yield return _errors.Dequeue ();
+			}
 		}
 
 		public void Send(MessageEncoder oscMessage) {
@@ -63,6 +61,29 @@ namespace Osc {
 			}
 			return address;
 		}
+        public void UpdateDefaultRemote () {
+            _defaultRemote = new IPEndPoint (FindFromHostName (defaultRemoteHost), defaultRemotePort);
+        }
+
+		protected virtual void OnEnable() {
+			_oscParser = new Parser ();
+			_received = new Queue<Capsule> ();
+			_errors = new Queue<Exception> ();
+			UpdateDefaultRemote();
+		}
+		protected virtual void OnDisable() {
+		}
+
+		protected virtual void Update() {
+			if (receiveMode == ReceiveModeEnum.Event) {
+				lock (_received)
+					while (_received.Count > 0)
+						OnReceive.Invoke (_received.Dequeue ());
+				lock (_errors)
+					while (_errors.Count > 0)
+						OnError.Invoke (_errors.Dequeue ());
+			}
+		}
 		protected void RaiseError(System.Exception e) {
 			_errors.Enqueue (e);
 		}
@@ -71,6 +92,7 @@ namespace Osc {
 				_received.Enqueue (c);
 		}
 
+		#region classes
 		public struct Capsule {
 			public Message message;
 			public IPEndPoint ip;
@@ -80,6 +102,7 @@ namespace Osc {
 				this.ip = ip;
 			}
 		}
+		#endregion
 	}
 
 	[System.Serializable]

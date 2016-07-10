@@ -36,6 +36,7 @@ namespace DataUI {
             public Matrix4x4 mData;
     		public Color colorData;
     		public TeamEnum team;
+            public string stringData;
 			public int[] arrayData;
     	}
     }

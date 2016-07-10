@@ -2,12 +2,19 @@
 using System.Collections;
 
 namespace DataUI {
+    
 	public class ReflectiveCopyTest : MonoBehaviour {
-		public Data data;
+        public Data data0;
+        public Data data1;
 
-		void Start () {
-			Debug.Log(ReflectiveCopy.Print(data));
-		}
+        ReflectiveCopy<Data, Data> _copy;
+
+        void Start() {
+            _copy = new ReflectiveCopy<Data, Data> (data0, data1);
+        }
+        void Update() {
+            _copy.Sync ();
+        }
 
     	[System.Serializable]
     	public class Data {

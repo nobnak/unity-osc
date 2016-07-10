@@ -28,14 +28,14 @@ namespace Osc {
 		public void OnServerReceive(OscPort.Capsule c) {
 			Debug.LogFormat ("On Server Receive");
 			if (c.message.path == OSC_PATH) {
-				serverData = JsonUtility.FromJson<Data> ((string)c.message.data [0]);
+				JsonUtility.FromJsonOverwrite((string)c.message.data [0], serverData);
 				_serverField.Load ();
 			}
 		}
 		public void OnClientReceive(OscPort.Capsule c) {
 			Debug.LogFormat ("On Client Receive");
 			if (c.message.path == OSC_PATH) {
-				clientData = JsonUtility.FromJson<Data> ((string)c.message.data [0]);
+				JsonUtility.FromJsonOverwrite((string)c.message.data [0], clientData);
 				_clientField.Load ();
 			}
 		}
@@ -54,6 +54,10 @@ namespace Osc {
 				osc.Add (JsonUtility.ToJson (serverData));
 				server.Send (osc);
 			}
+			if (GUILayout.Button ("Poll")) {
+				foreach (var r in server.PollReceived())
+					OnServerReceive (r);				
+			}
 			GUILayout.EndVertical ();
 
 			GUILayout.BeginVertical ();
@@ -63,6 +67,10 @@ namespace Osc {
 				var osc = new MessageEncoder (OSC_PATH);
 				osc.Add (JsonUtility.ToJson (clientData));
 				client.Send (osc);
+			}
+			if (GUILayout.Button ("Poll")) {
+				foreach (var r in client.PollReceived())
+					OnClientReceive (r);
 			}
 			GUILayout.EndVertical ();
 

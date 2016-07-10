@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DataUI {
 	public class FieldEditor {
-		public enum FieldKindEnum { Int, Float, Bool, Vector2, Vector3, Vector4, Matrix, Color, Enum, Unknown }
+		public enum FieldKindEnum { Int, Float, Bool, Vector2, Vector3, Vector4, Matrix, Color, Enum, String, Unknown }
 		public const BindingFlags BINDING = BindingFlags.Public | BindingFlags.Instance;
 
 		public readonly System.Object data;
@@ -52,6 +52,8 @@ namespace DataUI {
 				return new GUIBool (data, fi);
 			case FieldKindEnum.Enum:
 				return new GUIEnum (data, fi);
+            case FieldKindEnum.String:
+                return new GUIText (data, fi);
 			default:
 				return new GUIUnsupported (data, fi);
 			}
@@ -82,6 +84,8 @@ namespace DataUI {
                 if (fieldType == typeof(Matrix4x4))
                     return FieldKindEnum.Matrix;
 			}
+            if (fieldType == typeof(string))
+                return FieldKindEnum.String;
 
 			return FieldKindEnum.Unknown;
 		}
@@ -310,6 +314,27 @@ namespace DataUI {
 				return System.Enum.ToObject (Fi.FieldType, TextInt.Value);
 			}
 		}
+        public class GUIText : BaseGUIField {
+            public string text;
+
+            public GUIText(System.Object data, FieldInfo fi) : base(data, fi) {
+                Load();
+                _onGUI = () => {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(string.Format("{0} ", fi.Name), GUILayout.ExpandWidth(false));
+                    text = GUILayout.TextField(text, GUILayout.ExpandWidth(true), GUILayout.MinWidth(30f));
+                    GUILayout.EndHorizontal();
+                    Save ();
+                };
+            }
+
+            public override void Load() {
+                text = (string)Fi.GetValue (Data);
+            }
+            public override void Save () {
+                Fi.SetValue (Data, text);
+            }
+        }
 		public class GUIUnsupported : BaseGUIField {
 			public GUIUnsupported(System.Object data, FieldInfo fi) : base(data, fi) {
 				_onGUI = () => {
