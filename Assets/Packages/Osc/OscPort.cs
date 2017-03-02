@@ -13,6 +13,7 @@ namespace Osc {
 
 		public const int BUFFER_SIZE = 1 << 16;
 		public CapsuleEvent OnReceive;
+		public ReceiveEventOnSpecifiedPath[] OnReceivesSpecified;
 		public ExceptionEvent OnError;
 
 		public ReceiveModeEnum receiveMode = ReceiveModeEnum.Event;
@@ -78,7 +79,7 @@ namespace Osc {
 			if (receiveMode == ReceiveModeEnum.Event) {
 				lock (_received)
 					while (_received.Count > 0)
-						OnReceive.Invoke (_received.Dequeue ());
+						NotifyReceived (_received.Dequeue ());
 				lock (_errors)
 					while (_errors.Count > 0)
 						OnError.Invoke (_errors.Dequeue ());
@@ -92,6 +93,13 @@ namespace Osc {
 				_received.Enqueue (c);
 		}
 
+		void NotifyReceived (Capsule c) {
+			OnReceive.Invoke (c);
+			foreach (var e in OnReceivesSpecified)
+				if (e.TryToAccept (c.message))
+					break;
+		}
+
 		#region classes
 		public struct Capsule {
 			public Message message;
@@ -100,6 +108,19 @@ namespace Osc {
 			public Capsule(Message message, IPEndPoint ip) {
 				this.message = message;
 				this.ip = ip;
+			}
+		}
+		[System.Serializable]
+		public class ReceiveEventOnSpecifiedPath {
+			public string path;
+			public MessageEvent OnReceive;
+
+			public bool TryToAccept(Message m) {
+				if (m.path == path) {
+					OnReceive.Invoke (m);
+					return true;
+				}
+				return false;
 			}
 		}
 		#endregion

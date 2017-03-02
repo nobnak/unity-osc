@@ -27,17 +27,23 @@ namespace Osc {
 
 		public void OnServerReceive(OscPort.Capsule c) {
 			Debug.LogFormat ("On Server Receive");
-			if (c.message.path == OSC_PATH) {
-				JsonUtility.FromJsonOverwrite((string)c.message.data [0], serverData);
-				_serverField.Load ();
-			}
+			if (c.message.path == OSC_PATH)
+				OnServerReceive (c.message);
+		}
+		public void OnServerReceive(Message m) {
+			Debug.LogFormat ("On Server Receive");
+			JsonUtility.FromJsonOverwrite((string)m.data [0], serverData);
+			_serverField.Load ();
 		}
 		public void OnClientReceive(OscPort.Capsule c) {
 			Debug.LogFormat ("On Client Receive");
-			if (c.message.path == OSC_PATH) {
-				JsonUtility.FromJsonOverwrite((string)c.message.data [0], clientData);
-				_clientField.Load ();
-			}
+			if (c.message.path == OSC_PATH)
+				OnClientReceive (c.message);
+		}
+		public void OnClientReceive(Message m) {
+			Debug.LogFormat ("On Client Receive");
+			JsonUtility.FromJsonOverwrite((string)m.data [0], clientData);
+			_clientField.Load ();
 		}
 		public void OnError(System.Exception e) {
 			Debug.LogFormat ("Exception {0}", e);
