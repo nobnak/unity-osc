@@ -86,6 +86,7 @@ namespace Osc {
 			}
 		}
 		protected void RaiseError(System.Exception e) {
+            Debug.LogError(e);
 			_errors.Enqueue (e);
 		}
 		protected void Receive(OscPort.Capsule c) {
