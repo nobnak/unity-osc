@@ -31,8 +31,9 @@ namespace Osc {
 		}
 		protected override void OnDisable() {
 			if (_udp != null) {
-				_udp.Close ();
-				_udp = null;
+                var u = _udp;
+                _udp = null;
+                u.Close ();
 			}
 			if (_reader != null) {
 				_reader.Abort ();
@@ -67,7 +68,8 @@ namespace Osc {
 						}
 					}
 				} catch (Exception e) {
-					RaiseError (e);
+                    if (_udp != null)
+					    RaiseError (e);
 				}
 			}
 		}
