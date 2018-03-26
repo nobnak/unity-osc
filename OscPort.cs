@@ -52,7 +52,7 @@ namespace Osc {
 		public abstract void Send (byte[] oscData, IPEndPoint remote);
 
 		public IPAddress FindFromHostName(string hostname) {
-			var addresses = Dns.GetHostAddresses (defaultRemoteHost);
+			var addresses = Dns.GetHostAddresses (hostname);
 			IPAddress address = IPAddress.None;
 			for (var i = 0; i < addresses.Length; i++) {
 				if (addresses[i].AddressFamily == AddressFamily.InterNetwork) {
