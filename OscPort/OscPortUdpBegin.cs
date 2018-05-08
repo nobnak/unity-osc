@@ -1,4 +1,4 @@
-﻿using System.Net.Sockets;
+using System.Net.Sockets;
 using System;
 using System.Net;
 using Osc;
@@ -46,10 +46,8 @@ namespace Osc {
 				byte[] receivedData = _udp.EndReceive(ar, ref clientEndpoint);
 				_oscParser.FeedData(receivedData, receivedData.Length);
 				while (_oscParser.MessageCount > 0) {
-					lock (_received) {
-						var msg = _oscParser.PopMessage();
-						Receive(new Capsule(msg, clientEndpoint));
-					}
+					var msg = _oscParser.PopMessage();
+					Receive(new Capsule(msg, clientEndpoint));
 				}
 			} catch (Exception e) {
 				RaiseError (e);

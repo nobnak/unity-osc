@@ -52,20 +52,19 @@ namespace Osc {
 		}
 			
 		void Reader() {
+			var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
 			while (_udp != null) {
 				try {
-					var clientEndpoint = new IPEndPoint (IPAddress.Any, 0);
 					var fromendpoint = (EndPoint)clientEndpoint;
 					var length = _udp.ReceiveFrom(_receiveBuffer, ref fromendpoint);
-					if (length == 0 || (clientEndpoint = fromendpoint as IPEndPoint) == null)
+					var fromipendpoint = fromendpoint as IPEndPoint;
+					if (length == 0 || fromipendpoint == null)
 						continue;
 					
 					_oscParser.FeedData (_receiveBuffer, length);
 					while (_oscParser.MessageCount > 0) {
-						lock (_received) {
-							var msg = _oscParser.PopMessage ();
-							Receive(new Capsule (msg, clientEndpoint));
-						}
+						var msg = _oscParser.PopMessage();
+						Receive(new Capsule(msg, clientEndpoint));
 					}
 				} catch (Exception e) {
                     if (_udp != null)
