@@ -110,6 +110,9 @@ namespace Osc {
 				this.message = message;
 				this.ip = ip;
 			}
+			public override string ToString() {
+				return string.Format("OSC Capsule ip={0}", ip);
+			}
 		}
 		[System.Serializable]
 		public class ReceiveEventOnSpecifiedPath {

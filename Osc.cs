@@ -1,6 +1,7 @@
 // Osc.cs - A minimal OSC receiver implementation for Unity.
 // https://github.com/keijiro/unity-osc
 using System;
+using System.Text;
 
 namespace Osc {
     using MessageQueue = System.Collections.Generic.Queue<Message>;
@@ -10,10 +11,11 @@ namespace Osc {
         public object[] data;
         
 		public override string ToString () {
-            var temp = path + ":";
-            foreach (var o in data)
-                temp += o + ":";
-            return temp;
+			var buf = new StringBuilder();
+            buf.AppendFormat("path={0} : ", path);
+			for (var i = 0; i < data.Length; i++)
+				buf.AppendFormat("data[{0}]={1}, ", i, data[i]);
+            return buf.ToString();
         }
     }
     
