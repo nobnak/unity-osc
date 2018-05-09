@@ -112,6 +112,10 @@ namespace Osc {
 				this.message = message;
 				this.ip = ip;
 			}
+
+			public override string ToString() {
+				return string.Format("{0}, {1}", ip, message);
+			}
 		}
 		[System.Serializable]
 		public class ReceiveEventOnSpecifiedPath {
