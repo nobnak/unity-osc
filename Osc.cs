@@ -11,11 +11,11 @@ namespace Osc {
         public object[] data;
         
 		public override string ToString () {
-			var tmp = new StringBuilder();
-            tmp.AppendFormat("{0}:", path);
-            foreach (var o in data)
-                tmp.AppendFormat("{0}:", o);
-            return tmp.ToString();
+			var buf = new StringBuilder();
+            buf.AppendFormat("path={0} : ", path);
+			for (var i = 0; i < data.Length; i++)
+				buf.AppendFormat("data[{0}]={1}, ", i, data[i]);
+            return buf.ToString();
         }
     }
     
