@@ -26,7 +26,9 @@ namespace Osc {
 		protected Queue<Capsule> _received;
 		protected Queue<System.Exception> _errors;
 		protected IPEndPoint _defaultRemote;
+		protected Queue<SendData> _willBeSent;
 
+		#region public
 		public virtual IEnumerable<Capsule> PollReceived() {
 			lock (_received) {
 				while (_received.Count > 0)
@@ -40,18 +42,21 @@ namespace Osc {
 			}
 		}
 
-		public void Send(MessageEncoder oscMessage) {
+		public virtual void Send(MessageEncoder oscMessage) {
 			Send (oscMessage, _defaultRemote);
 		}
-		public void Send(MessageEncoder oscMessage, IPEndPoint remote) {
+		public virtual void Send(MessageEncoder oscMessage, IPEndPoint remote) {
 			Send (oscMessage.Encode (), remote);
 		}
-		public void Send(byte[] oscData) {
+		public virtual void Send(byte[] oscData) {
 			Send (oscData, _defaultRemote);
 		}
-		public abstract void Send (byte[] oscData, IPEndPoint remote);
+		public virtual void Send (byte[] oscData, IPEndPoint remote) {
+			lock (_willBeSent)
+				_willBeSent.Enqueue(new SendData(oscData, remote));
+		}
 
-		public IPAddress FindFromHostName(string hostname) {
+		public virtual IPAddress FindFromHostName(string hostname) {
 			var addresses = Dns.GetHostAddresses (hostname);
 			IPAddress address = IPAddress.None;
 			for (var i = 0; i < addresses.Length; i++) {
@@ -62,14 +67,17 @@ namespace Osc {
 			}
 			return address;
 		}
-        public void UpdateDefaultRemote () {
+		public virtual void UpdateDefaultRemote () {
             _defaultRemote = new IPEndPoint (FindFromHostName (defaultRemoteHost), defaultRemotePort);
         }
+		#endregion
 
+		#region Unity
 		protected virtual void OnEnable() {
 			_oscParser = new Parser ();
 			_received = new Queue<Capsule> ();
 			_errors = new Queue<Exception> ();
+			_willBeSent = new Queue<SendData>();
 			UpdateDefaultRemote();
 		}
 		protected virtual void OnDisable() {
@@ -85,23 +93,27 @@ namespace Osc {
 						OnError.Invoke (_errors.Dequeue ());
 			}
 		}
-		protected void RaiseError(System.Exception e) {
+		#endregion
+
+		#region private
+		protected virtual void RaiseError(System.Exception e) {
             //Debug.LogError(e);
 			_errors.Enqueue (e);
 		}
-		protected void Receive(OscPort.Capsule c) {
+		protected virtual void Receive(OscPort.Capsule c) {
 			lock (_received) {
 				if (limitReceiveBuffer <= 0 || _received.Count < limitReceiveBuffer)
 					_received.Enqueue(c);
 			}
 		}
 
-		void NotifyReceived (Capsule c) {
+		protected virtual void NotifyReceived (Capsule c) {
 			OnReceive.Invoke (c);
 			foreach (var e in OnReceivesSpecified)
 				if (e.TryToAccept (c.message))
 					break;
 		}
+		#endregion
 
 		#region classes
 		public struct Capsule {
@@ -115,6 +127,18 @@ namespace Osc {
 
 			public override string ToString() {
 				return string.Format("{0}, {1}", ip, message);
+			}
+		}
+		public struct SendData {
+			public readonly byte[] oscData;
+			public readonly IPEndPoint remote;
+
+			public SendData(byte[] oscData, IPEndPoint remote) {
+				this.oscData = oscData;
+				this.remote = remote;
+			}
+			public int Send(Socket s) {
+				return s.SendTo(oscData, remote);
 			}
 		}
 		[System.Serializable]
