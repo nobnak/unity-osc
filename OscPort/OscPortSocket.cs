@@ -1,22 +1,21 @@
-using System.Net.Sockets;
 using System;
-using System.Net;
-using Osc;
 using System.Collections.Generic;
-using UnityEngine.Events;
-using UnityEngine;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using UnityEngine.Profiling;
 
 namespace Osc {
 	public class OscPortSocket : OscPort {
-		Socket _udp;
-		byte[] _receiveBuffer;
-		Thread _reader;
-		Thread _sender;
+		protected Socket _udp;
+		protected byte[] _receiveBuffer;
+		protected Thread _reader;
+		protected Thread _sender;
+		protected Queue<SendData> _willBeSent;
 
-		CustomSampler sampler;
+		protected CustomSampler sampler;
 
+		#region unity
 		protected override void OnEnable() {
 			try {
 				base.OnEnable();
@@ -25,6 +24,7 @@ namespace Osc {
 				_udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
 
 				_receiveBuffer = new byte[BUFFER_SIZE];
+				_willBeSent = new Queue<SendData>();
 
 				_reader = new Thread(Reader);
 				_sender = new Thread(Sender);
@@ -54,7 +54,13 @@ namespace Osc {
 
 			base.OnDisable ();
 		}
-			
+		#endregion
+
+		#region private
+		protected override void SendImpl(byte[] oscData, IPEndPoint remote) {
+			lock (_willBeSent)
+				_willBeSent.Enqueue(new SendData(oscData, remote));
+		}
 		void Reader() {
 			var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
 			while (_udp != null) {
@@ -86,9 +92,10 @@ namespace Osc {
 						continue;
 
 					sampler.Begin();
-					lock (_willBeSent)
+					lock (_willBeSent) {
 						while (_willBeSent.Count > 0)
 							_willBeSent.Dequeue().Send(_udp);
+					}
 					sampler.End();
 
 				} catch(Exception e) {
@@ -99,5 +106,6 @@ namespace Osc {
 
 			Profiler.EndThreadProfiling();
 		}
+		#endregion
 	}
 }

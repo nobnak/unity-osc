@@ -12,6 +12,7 @@ namespace Osc {
 		UdpClient _udp;
 		Thread _reader;
 
+		#region private
 		protected override void OnEnable() {
 			base.OnEnable ();
 			try {
@@ -34,7 +35,7 @@ namespace Osc {
 			base.OnDisable ();
 		}
 
-		public override void Send(byte[] oscData, IPEndPoint remote) {
+		protected override void SendImpl(byte[] oscData, IPEndPoint remote) {
 			try {
 				_udp.Send (oscData, oscData.Length, remote);
 			} catch (System.Exception e) {
@@ -42,8 +43,8 @@ namespace Osc {
 			}
 		}
 
-			
-		void Reader() {
+
+		protected void Reader() {
 			while (_udp != null) {
 				try {
 					var clientEndpoint = new IPEndPoint (IPAddress.Any, 0);
@@ -58,5 +59,6 @@ namespace Osc {
 				}
 			}
 		}
+		#endregion
 	}
 }

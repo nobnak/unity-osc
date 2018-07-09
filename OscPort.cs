@@ -1,11 +1,11 @@
-using System.Net.Sockets;
+using nobnak.Gist.Profiling;
+using nobnak.Gist.ThreadSafe;
 using System;
-using System.Net;
-using Osc;
 using System.Collections.Generic;
-using UnityEngine.Events;
+using System.Net;
+using System.Net.Sockets;
 using UnityEngine;
-using System.Threading;
+using UnityEngine.Events;
 
 namespace Osc {
 	public abstract class OscPort : MonoBehaviour {
@@ -26,7 +26,9 @@ namespace Osc {
 		protected Queue<Capsule> _received;
 		protected Queue<System.Exception> _errors;
 		protected IPEndPoint _defaultRemote;
-		protected Queue<SendData> _willBeSent;
+
+		protected Frequency sendFrequency = new Frequency();
+		protected Frequency recvFrequency = new Frequency();
 
 		#region public
 		public virtual IEnumerable<Capsule> PollReceived() {
@@ -51,9 +53,9 @@ namespace Osc {
 		public virtual void Send(byte[] oscData) {
 			Send (oscData, _defaultRemote);
 		}
-		public virtual void Send (byte[] oscData, IPEndPoint remote) {
-			lock (_willBeSent)
-				_willBeSent.Enqueue(new SendData(oscData, remote));
+		public void Send(byte[] oscData, IPEndPoint remote) {
+			sendFrequency.Increment();
+			SendImpl(oscData, remote);
 		}
 
 		public virtual IPAddress FindFromHostName(string hostname) {
@@ -70,14 +72,19 @@ namespace Osc {
 		public virtual void UpdateDefaultRemote () {
             _defaultRemote = new IPEndPoint (FindFromHostName (defaultRemoteHost), defaultRemotePort);
         }
+		public virtual Diagnostics GetDiagnostics() {
+			return new Diagnostics(
+				sendFrequency.CurrentFrequency,
+				recvFrequency.CurrentFrequency);
+		}
 		#endregion
 
 		#region Unity
+		protected abstract void SendImpl(byte[] oscData, IPEndPoint remote);
 		protected virtual void OnEnable() {
 			_oscParser = new Parser ();
 			_received = new Queue<Capsule> ();
 			_errors = new Queue<Exception> ();
-			_willBeSent = new Queue<SendData>();
 			UpdateDefaultRemote();
 		}
 		protected virtual void OnDisable() {
@@ -101,6 +108,7 @@ namespace Osc {
 			_errors.Enqueue (e);
 		}
 		protected virtual void Receive(OscPort.Capsule c) {
+			recvFrequency.Increment();
 			lock (_received) {
 				if (limitReceiveBuffer <= 0 || _received.Count < limitReceiveBuffer)
 					_received.Enqueue(c);
@@ -163,4 +171,19 @@ namespace Osc {
 	public class CapsuleEvent : UnityEvent<OscPort.Capsule> {}
 	[System.Serializable]
 	public class MessageEvent : UnityEvent<Message> {}
+	
+	public struct Diagnostics {
+		public readonly float sendFrequency;
+		public readonly float recvFrequency;
+
+		public Diagnostics(float sendFrequency, float recvFrequency) {
+			this.sendFrequency = sendFrequency;
+			this.recvFrequency = recvFrequency;
+		}
+
+		public override string ToString() {
+			return string.Format("<Diagnostics: frequencies (send={0:f1} recv={1:f1})>", 
+				sendFrequency, recvFrequency);
+		}
+	}
 }

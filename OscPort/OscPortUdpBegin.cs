@@ -11,6 +11,7 @@ namespace Osc {
 		UdpClient _udp;
 		AsyncCallback _callback;
 
+		#region private
 		protected override void OnEnable() {
 			base.OnEnable ();
 			try {
@@ -30,7 +31,7 @@ namespace Osc {
 			base.OnDisable ();
 		}
 
-		public override void Send(byte[] oscData, IPEndPoint remote) {
+		protected override void SendImpl(byte[] oscData, IPEndPoint remote) {
 			try {
 				_udp.Send (oscData, oscData.Length, remote);
 			} catch (System.Exception e) {
@@ -38,7 +39,7 @@ namespace Osc {
 			}
 		}
 
-		void HandleReceive(System.IAsyncResult ar) {
+		protected virtual void HandleReceive(System.IAsyncResult ar) {
 			try {
 				if (_udp == null)
 					return;
@@ -54,5 +55,6 @@ namespace Osc {
 			}
 			_udp.BeginReceive(_callback, null);
 		}
+		#endregion
 	}
 }
