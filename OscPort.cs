@@ -1,6 +1,7 @@
 using nobnak.Gist.Profiling;
 using nobnak.Gist.ThreadSafe;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -26,6 +27,8 @@ namespace Osc {
 		protected Queue<Capsule> _received;
 		protected Queue<System.Exception> _errors;
 		protected IPEndPoint _defaultRemote;
+
+		protected Queue<Capsule> tmpReceived;
 
 		protected Frequency sendFrequency = new Frequency();
 		protected Frequency recvFrequency = new Frequency();
@@ -80,11 +83,16 @@ namespace Osc {
 		#endregion
 
 		#region Unity
-		protected abstract void SendImpl(byte[] oscData, IPEndPoint remote);
+		protected virtual void Awake() {
+#if UNITY_EDITOR
+			StartCoroutine(Logger());
+#endif
+		}
 		protected virtual void OnEnable() {
 			_oscParser = new Parser ();
 			_received = new Queue<Capsule> ();
 			_errors = new Queue<Exception> ();
+			tmpReceived = new Queue<Capsule>();
 			UpdateDefaultRemote();
 		}
 		protected virtual void OnDisable() {
@@ -94,17 +102,23 @@ namespace Osc {
 			if (receiveMode == ReceiveModeEnum.Event) {
 				lock (_received)
 					while (_received.Count > 0)
-						NotifyReceived (_received.Dequeue ());
+						tmpReceived.Enqueue(_received.Dequeue());
+				while(tmpReceived.Count > 0)
+					NotifyReceived (tmpReceived.Dequeue ());
+
 				lock (_errors)
 					while (_errors.Count > 0)
 						OnError.Invoke (_errors.Dequeue ());
 			}
 		}
-		#endregion
+#endregion
 
-		#region private
+#region private
+		protected abstract void SendImpl(byte[] oscData, IPEndPoint remote);
 		protected virtual void RaiseError(System.Exception e) {
-            //Debug.LogError(e);
+#if UNITY_EDITOR
+			Debug.LogError(e);
+#endif
 			_errors.Enqueue (e);
 		}
 		protected virtual void Receive(OscPort.Capsule c) {
@@ -121,9 +135,19 @@ namespace Osc {
 				if (e.TryToAccept (c.message))
 					break;
 		}
-		#endregion
+		protected virtual IEnumerator Logger() {
+			while (true) {
+				yield return new WaitForSeconds(60f);
+				Debug.LogFormat("OSC Recv : freq={0} count={1}) Send : freq={2} count={3})",
+					recvFrequency.CurrentFrequency,
+					recvFrequency.CurrentCount,
+					sendFrequency.CurrentFrequency,
+					sendFrequency.CurrentCount);
+			}
+		}
+#endregion
 
-		#region classes
+#region classes
 		public struct Capsule {
 			public Message message;
 			public IPEndPoint ip;
@@ -162,7 +186,7 @@ namespace Osc {
 				return false;
 			}
 		}
-		#endregion
+#endregion
 	}
 
 	[System.Serializable]
