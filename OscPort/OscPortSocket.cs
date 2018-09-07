@@ -21,8 +21,6 @@ namespace Osc {
 				base.OnEnable();
 
 				_udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-				_udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
-
 				_receiveBuffer = new byte[BUFFER_SIZE];
 				_willBeSent = new Queue<SendData>();
 
@@ -30,6 +28,7 @@ namespace Osc {
 				_sender = new Thread(Sender);
 				sampler = CustomSampler.Create("Sampler");
 
+				_udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
 				_reader.Start();
 				_sender.Start();
 			} catch (System.Exception e) {
@@ -70,7 +69,7 @@ namespace Osc {
 					var fromipendpoint = fromendpoint as IPEndPoint;
 					if (length == 0 || fromipendpoint == null)
 						continue;
-					
+
 					_oscParser.FeedData (_receiveBuffer, length);
 					while (_oscParser.MessageCount > 0) {
 						var msg = _oscParser.PopMessage();
