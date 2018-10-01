@@ -22,7 +22,7 @@ namespace Osc {
 		public string defaultRemoteHost = "localhost";
 		public int defaultRemotePort = 10000;
 		public int limitReceiveBuffer = 10;
-		
+
 		protected Parser _oscParser;
 		protected Queue<Capsule> _received;
 		protected Queue<System.Exception> _errors;
@@ -62,14 +62,16 @@ namespace Osc {
 		}
 
 		public virtual IPAddress FindFromHostName(string hostname) {
-			var addresses = Dns.GetHostAddresses (hostname);
-			IPAddress address = IPAddress.None;
-			for (var i = 0; i < addresses.Length; i++) {
-				if (addresses[i].AddressFamily == AddressFamily.InterNetwork) {
-					address = addresses[i];
-					break;
+			var address = IPAddress.None;
+			try {
+				var addresses = Dns.GetHostAddresses(hostname);
+				for (var i = 0; i < addresses.Length; i++) {
+					if (addresses[i].AddressFamily == AddressFamily.InterNetwork) {
+						address = addresses[i];
+						break;
+					}
 				}
-			}
+			} catch { }
 			return address;
 		}
 		public virtual void UpdateDefaultRemote () {
@@ -195,7 +197,7 @@ namespace Osc {
 	public class CapsuleEvent : UnityEvent<OscPort.Capsule> {}
 	[System.Serializable]
 	public class MessageEvent : UnityEvent<Message> {}
-	
+
 	public struct Diagnostics {
 		public readonly float sendFrequency;
 		public readonly float recvFrequency;
@@ -206,7 +208,7 @@ namespace Osc {
 		}
 
 		public override string ToString() {
-			return string.Format("<Diagnostics: frequencies (send={0:f1} recv={1:f1})>", 
+			return string.Format("<Diagnostics: frequencies (send={0:f1} recv={1:f1})>",
 				sendFrequency, recvFrequency);
 		}
 	}
