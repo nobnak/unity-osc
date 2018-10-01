@@ -64,6 +64,9 @@ namespace Osc {
 		public virtual IPAddress FindFromHostName(string hostname) {
 			var address = IPAddress.None;
 			try {
+				if (IPAddress.TryParse(hostname, out address))
+					return address;
+
 				var addresses = Dns.GetHostAddresses(hostname);
 				for (var i = 0; i < addresses.Length; i++) {
 					if (addresses[i].AddressFamily == AddressFamily.InterNetwork) {
@@ -71,7 +74,11 @@ namespace Osc {
 						break;
 					}
 				}
-			} catch { }
+			} catch (System.Exception e) {
+				Debug.LogErrorFormat(
+					"Failed to find IP for :\n host name = {0}\n exception={1}",
+					hostname, e);
+			}
 			return address;
 		}
 		public virtual void UpdateDefaultRemote () {
