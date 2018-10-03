@@ -57,6 +57,8 @@ namespace Osc {
 			Send (oscData, _defaultRemote);
 		}
 		public void Send(byte[] oscData, IPEndPoint remote) {
+			if (remote == null)
+				return;
 			sendFrequency.Increment();
 			SendImpl(oscData, remote);
 		}
@@ -82,7 +84,11 @@ namespace Osc {
 			return address;
 		}
 		public virtual void UpdateDefaultRemote () {
-            _defaultRemote = new IPEndPoint (FindFromHostName (defaultRemoteHost), defaultRemotePort);
+			try {
+				_defaultRemote = new IPEndPoint(FindFromHostName(defaultRemoteHost), defaultRemotePort);
+			} catch {
+				_defaultRemote = null;
+			}
         }
 		public virtual Diagnostics GetDiagnostics() {
 			return new Diagnostics(
