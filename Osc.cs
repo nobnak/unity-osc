@@ -77,25 +77,27 @@ namespace Osc {
             temp.path = path;
             
             var types = ReadString ();
-			temp.data = new object[types.Length - 1];            
-            for (var i = 0; i < types.Length - 1; i++) {
-                switch (types [i + 1]) {
-                case 'f':
-                    temp.data [i] = ReadFloat32 ();
-                    break;
-                case 'i':
-                    temp.data [i] = ReadInt32 ();
-                    break;
-                case 's':
-                    temp.data [i] = ReadString ();
-                    break;
-                case 'b':
-                    temp.data [i] = ReadBlob ();
-                    break;
-                }
-            }
-            
-            messageBuffer.Enqueue (temp);
+			var data = new object[(types.Length > 0 ? types.Length - 1 : 0)];
+
+			for (var i = 0; i < types.Length - 1; i++) {
+				switch (types[i + 1]) {
+					case 'f':
+						data[i] = ReadFloat32();
+						break;
+					case 'i':
+						data[i] = ReadInt32();
+						break;
+					case 's':
+						data[i] = ReadString();
+						break;
+					case 'b':
+						data[i] = ReadBlob();
+						break;
+				}
+			}
+			temp.data = data;
+
+			messageBuffer.Enqueue (temp);
         }
         
 		float ReadFloat32 () {
