@@ -73,7 +73,7 @@ namespace Osc {
 					_oscParser.FeedData (_receiveBuffer, length);
 					while (_oscParser.MessageCount > 0) {
 						var msg = _oscParser.PopMessage();
-						Receive(new Capsule(msg, clientEndpoint));
+						Receive(new Capsule(msg, fromipendpoint));
 					}
 				} catch (Exception e) {
                     if (_udp != null)
