@@ -29,7 +29,7 @@ namespace Osc {
 				_udp = null;
 			}
 			if (_reader != null) {
-				_reader.Abort ();
+				_reader.Interrupt ();
 				_reader = null;
 			}
 			base.OnDisable ();
@@ -47,13 +47,20 @@ namespace Osc {
 		protected void Reader() {
 			while (_udp != null) {
 				try {
-					var clientEndpoint = new IPEndPoint (IPAddress.Any, 0);
+					var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
 					var receivedData = _udp.Receive(ref clientEndpoint);
-					_oscParser.FeedData (receivedData, receivedData.Length);
+					_oscParser.FeedData(receivedData, receivedData.Length);
 					while (_oscParser.MessageCount > 0) {
 						var msg = _oscParser.PopMessage();
 						Receive(new Capsule(msg, clientEndpoint));
 					}
+				} catch (ThreadInterruptedException e) {
+#if UNITY_EDITOR
+					Debug.Log($"Reader interrupted:\n{e}");
+#endif
+				} catch (SocketException e) {
+					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
+						RaiseError(e);
 				} catch (Exception e) {
 					RaiseError (e);
 				}

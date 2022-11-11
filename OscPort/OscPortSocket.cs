@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -43,11 +44,11 @@ namespace Osc {
                 u.Close ();
 			}
 			if (_reader != null) {
-				_reader.Abort ();
+				_reader.Interrupt ();
 				_reader = null;
 			}
 			if (_sender != null) {
-				_sender.Abort();
+				_sender.Interrupt();
 				_sender = null;
 			}
 
@@ -70,11 +71,18 @@ namespace Osc {
 					if (length == 0 || fromipendpoint == null)
 						continue;
 
-					_oscParser.FeedData (_receiveBuffer, length);
+					_oscParser.FeedData(_receiveBuffer, length);
 					while (_oscParser.MessageCount > 0) {
 						var msg = _oscParser.PopMessage();
 						Receive(new Capsule(msg, clientEndpoint));
 					}
+				} catch (ThreadInterruptedException e) {
+#if UNITY_EDITOR
+					UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
+#endif
+				} catch (SocketException e) {
+					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
+						RaiseError(e);
 				} catch (Exception e) {
                     if (_udp != null)
 					    RaiseError (e);
@@ -96,7 +104,13 @@ namespace Osc {
 							_willBeSent.Dequeue().Send(_udp);
 					}
 					sampler.End();
-
+				} catch (ThreadInterruptedException e) {
+#if UNITY_EDITOR
+					UnityEngine.Debug.Log($"Sender thread interrupted:\n{e}");
+#endif
+				} catch (SocketException e) {
+					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
+						RaiseError(e);
 				} catch(Exception e) {
 					if (_udp != null)
 						RaiseError(e);
