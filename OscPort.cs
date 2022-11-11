@@ -10,6 +10,7 @@ using UnityEngine.Events;
 
 namespace Osc {
 	public abstract class OscPort : MonoBehaviour {
+		public const int E_CANCEL_BLOCKING_CALL = unchecked((int)0x80004005);
 		public enum ReceiveModeEnum { Event = 0, Poll }
 
 		public const int BUFFER_SIZE = 1 << 16;
