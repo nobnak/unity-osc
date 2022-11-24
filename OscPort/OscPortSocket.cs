@@ -78,7 +78,7 @@ namespace Osc {
 					}
 				} catch (ThreadInterruptedException e) {
 #if UNITY_EDITOR
-					UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
+					UnityEngine.Debug.LogFormat("Reader thread interrupted:\n{0}",e);
 #endif
 				} catch (SocketException e) {
 					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
@@ -106,7 +106,7 @@ namespace Osc {
 					sampler.End();
 				} catch (ThreadInterruptedException e) {
 #if UNITY_EDITOR
-					UnityEngine.Debug.Log($"Sender thread interrupted:\n{e}");
+					UnityEngine.Debug.LogFormat("Sender thread interrupted:\n{0}",e);
 #endif
 				} catch (SocketException e) {
 					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
