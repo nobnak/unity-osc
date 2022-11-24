@@ -87,6 +87,15 @@ namespace Osc {
 				#endif
 );
 		}
+		
+		public IPAddress GetDefaultRemoteIP()
+		{
+			return _defaultRemote.Address;
+		}
+
+		public int GetDefaultRemotePort()
+		{
+			return _defaultRemote.Port;
 		}
         #endregion
 
