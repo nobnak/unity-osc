@@ -73,6 +73,8 @@ namespace Osc {
 		public virtual void UpdateDefaultRemote () {
 			try {
 				_defaultRemote = new IPEndPoint(FindFromHostName(defaultRemoteHost), defaultRemotePort);
+				if(_defaultRemote != null )
+					Debug.LogFormat("OscPort.cs : default remote set to: {0}, {1}", _defaultRemote.Address, _defaultRemote.Port);
 			} catch {
 				_defaultRemote = null;
 			}
