@@ -1,14 +1,14 @@
 {
     "name": "Osc",
-    "references": [
-        "nobnak.Gist"
-    ],
-    "optionalUnityReferences": [],
+    "rootNamespace": "",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

@@ -1,7 +1,3 @@
-#if CSHARP_7_3_OR_NEWER // Assuming that older versions of c# and older versions of Unity used this repository before "nobnak.Gist" was added.   It is assumed that newer versions of unity would have no problem including and compiling nobnak.Gist.
-using nobnak.Gist.Profiling;
-using nobnak.Gist.ThreadSafe;
-#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -33,11 +29,6 @@ namespace Osc {
 
 		protected Queue<Capsule> tmpReceived;
 
-#if CSHARP_7_3_OR_NEWER
-		protected Frequency sendFrequency = new Frequency();
-		protected Frequency recvFrequency = new Frequency();
-#endif
-
 		#region public
 		public virtual IEnumerable<Capsule> PollReceived() {
 			lock (_received) {
@@ -64,9 +55,6 @@ namespace Osc {
 		public void Send(byte[] oscData, IPEndPoint remote) {
 			if (remote == null)
 				return;
-#if CSHARP_7_3_OR_NEWER
-			sendFrequency.Increment();
-#endif
 			SendImpl(oscData, remote);
 		}
 
@@ -81,13 +69,8 @@ namespace Osc {
         }
 		public virtual Diagnostics GetDiagnostics() {
 			return new Diagnostics(
-#if CSHARP_7_3_OR_NEWER
-				sendFrequency.CurrentFrequency,
-				recvFrequency.CurrentFrequency
-#else
 				0f,0f
-				#endif
-);
+			);
 		}
 		
 		public IPAddress GetDefaultRemoteIP()
@@ -126,11 +109,6 @@ namespace Osc {
 
         #region Unity
         protected virtual void Awake() {
-#if UNITY_EDITOR
-#if CSHARP_7_3_OR_NEWER
-			StartCoroutine(Logger());
-#endif
-#endif
 		}
 		protected virtual void OnEnable() {
 			_oscParser = new Parser ();
@@ -155,20 +133,17 @@ namespace Osc {
 						OnError.Invoke (_errors.Dequeue ());
 			}
 		}
-#endregion
+		#endregion
 
-#region private
+		#region private
 		protected abstract void SendImpl(byte[] oscData, IPEndPoint remote);
 		protected virtual void RaiseError(System.Exception e) {
-#if UNITY_EDITOR
+			#if UNITY_EDITOR
 			Debug.LogError(e);
-#endif
+			#endif
 			_errors.Enqueue (e);
 		}
 		protected virtual void Receive(OscPort.Capsule c) {
-#if CSHARP_7_3_OR_NEWER
-			recvFrequency.Increment();
-#endif
 			lock (_received) {
 				if (limitReceiveBuffer <= 0 || _received.Count < limitReceiveBuffer)
 					_received.Enqueue(c);
@@ -181,21 +156,9 @@ namespace Osc {
 				if (e.TryToAccept (c.message))
 					break;
 		}
-#if CSHARP_7_3_OR_NEWER
-		protected virtual IEnumerator Logger() {
-			while (true) {
-				yield return new WaitForSeconds(60f);
-				Debug.LogFormat("OSC Recv : freq={0} count={1}) Send : freq={2} count={3})",
-					recvFrequency.CurrentFrequency,
-					recvFrequency.CurrentCount,
-					sendFrequency.CurrentFrequency,
-					sendFrequency.CurrentCount);
-			}
-		}
-#endif
-#endregion
+		#endregion
 
-#region classes
+		#region classes
 		public struct Capsule {
 			public Message message;
 			public IPEndPoint ip;
@@ -234,7 +197,7 @@ namespace Osc {
 				return false;
 			}
 		}
-#endregion
+		#endregion
 	}
 
 	[System.Serializable]
