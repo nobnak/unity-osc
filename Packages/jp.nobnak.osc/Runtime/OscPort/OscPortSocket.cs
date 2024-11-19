@@ -78,7 +78,7 @@ namespace Osc {
 					}
 				} catch (ThreadInterruptedException e) {
 #if UNITY_EDITOR
-					UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
+					UnityEngine.Debug.LogFormat("Reader thread interrupted:\n{0}",e);
 #endif
 				} catch (SocketException e) {
 					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
@@ -90,23 +90,28 @@ namespace Osc {
 			}
 		}
 		void Sender() {
+			#if UNITY_2018_OR_NEWER
 			Profiler.BeginThreadProfiling(typeof(OscPortSocket).Name, "Sender");
+			#endif
 
 			while (_udp != null) {
 				try {
 					Thread.Sleep(0);
 					if (_willBeSent.Count == 0)
 						continue;
-
+#if UNITY_2018_OR_NEWER
 					sampler.Begin();
+#endif
 					lock (_willBeSent) {
 						while (_willBeSent.Count > 0)
 							_willBeSent.Dequeue().Send(_udp);
 					}
+#if UNITY_2018_OR_NEWER
 					sampler.End();
+#endif
 				} catch (ThreadInterruptedException e) {
 #if UNITY_EDITOR
-					UnityEngine.Debug.Log($"Sender thread interrupted:\n{e}");
+					UnityEngine.Debug.LogFormat("Sender thread interrupted:\n{0}",e);
 #endif
 				} catch (SocketException e) {
 					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
@@ -116,8 +121,9 @@ namespace Osc {
 						RaiseError(e);
 				}
 			}
-
+#if UNITY_2018_OR_NEWER
 			Profiler.EndThreadProfiling();
+#endif
 		}
 		#endregion
 	}

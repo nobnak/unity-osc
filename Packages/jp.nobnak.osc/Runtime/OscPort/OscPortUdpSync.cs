@@ -56,7 +56,7 @@ namespace Osc {
 					}
 				} catch (ThreadInterruptedException e) {
 #if UNITY_EDITOR
-					Debug.Log($"Reader interrupted:\n{e}");
+					Debug.LogFormat("Reader interrupted:\n{0}",e);
 #endif
 				} catch (SocketException e) {
 					if (_udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
