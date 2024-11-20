@@ -16,7 +16,7 @@ namespace Osc {
 		protected override void OnEnable() {
 			base.OnEnable ();
 			try {
-				_udp = new UdpClient (localPort, AddressFamily.InterNetwork);
+				_udp = new UdpClient (config.localPort, AddressFamily.InterNetwork);
 				_reader = new Thread(Reader);
 				_reader.Start();
 			} catch (System.Exception e) {

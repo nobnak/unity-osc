@@ -29,7 +29,7 @@ namespace Osc {
 				_sender = new Thread(Sender);
 				sampler = CustomSampler.Create("Sampler");
 
-				_udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
+				_udp.Bind(new IPEndPoint(IPAddress.Any, config.localPort));
 				_reader.Start();
 				_sender.Start();
 			} catch (System.Exception e) {

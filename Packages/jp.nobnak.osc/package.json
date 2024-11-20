@@ -5,7 +5,5 @@
   },
   "name": "jp.nobnak.osc",
   "displayName": "OSC",
-  "version": "1.0.0",
-  "dependencies": {
-  }
+  "version": "2.0.2"
 }
