@@ -1,25 +1,29 @@
 unity-osc
 =========
-OSC Client & Server MonoBehaviours for Unity
+OSC for Unity
 
-[Unity Package](Osc.unitypackage)
+# Installation
+Released as [UPM package](https://openupm.com/packages/jp.nobnak.osc/) on OpenUPM.
+
+- Add URL "https://package.openupm.com" in a Scoped Registry
+- Add scope "jp.nobnak"
+- Add package "jp.nobnak.osc".
 
 # Usage
 ## Set Up a Server
- - Add OscServer (MonoBehaviour) Component
+ - Attach OscPortSocket script
  - Set Listening Port Number
  - Listen OnReceive Event
 
 ## Set Up a Client
- - Add OscClient (MonoBehaviour) Component
- - Set Server Name & Port Number
- - Listen OnReceive Event
+ - Attach OscPortSocket script
+ - Send messages
 
 ## Send a Message
 ```C#
-var oscEnc = new MessageEncoder("/path");
-oscEnc.Add(3.14f);
-oscEnc.Add(12345);
+var msg = new MessageEncoder("/path");
+msg.Add(3.14f);
+msg.Add(12345);
 var dest = new IPEndPoint("Client IP Address", "Client Port Number");
-_server.Send(oscEnc.Encode(), dest);
+oscPort.Send(msg, dest);
 ```
