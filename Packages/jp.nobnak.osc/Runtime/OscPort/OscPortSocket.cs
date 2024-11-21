@@ -97,7 +97,7 @@ namespace Osc {
 			while (_udp != null) {
 				try {
 					Thread.Sleep(0);
-					if (_willBeSent.Count == 0)
+					if (_willBeSent.Count == 0 || !_udp.IsBound)
 						continue;
 #if UNITY_2018_OR_NEWER
 					sampler.Begin();

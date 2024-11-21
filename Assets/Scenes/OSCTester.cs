@@ -26,10 +26,10 @@ public class OSCTester : MonoBehaviour {
         var osc = presets.osc;
         while (true) {
             if (osc != null) {
-                var msg = new MessageEncoder("/test");
-                msg.Add(123);
-                msg.Add("hello");
-                msg.Add(3.14f);
+                var msg = new MessageEncoder("/test")
+                    .Add(123)
+                    .Add("hello")
+                    .Add(3.14f);
                 osc.Send(msg);
                 yield return null;
             } else {

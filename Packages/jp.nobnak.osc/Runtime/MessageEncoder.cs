@@ -14,12 +14,30 @@ namespace Osc {
 			_params = new LinkedList<IParam> ();
 		}
 
-		public void Add (int content) {	_params.AddLast (new Int32Param (content)); }
-		public void Add (float content) { _params.AddLast (new Float32Param (content)); }
-		public void Add (string content) { _params.AddLast (new StringParam (content)); }
-		public void Add (byte[] content) { _params.AddLast (new BlobParam (content, 0, content.Length)); }
-		public void Add (byte[] content, int offset, int length) { _params.AddLast (new BlobParam (content, offset, length)); }
-		public void Add (int seconds, int fraction) { _params.AddLast (new TimeParam (seconds, fraction)); }
+		public MessageEncoder Add (int content) {
+			_params.AddLast (new Int32Param (content));
+			return this;
+		}
+		public MessageEncoder Add (float content) { 
+			_params.AddLast (new Float32Param (content));
+			return this;
+		}
+		public MessageEncoder Add (string content) { 
+			_params.AddLast (new StringParam (content));
+			return this;
+		}
+		public MessageEncoder Add (byte[] content) { 
+			_params.AddLast (new BlobParam (content, 0, content.Length));
+			return this;
+		}
+		public MessageEncoder Add (byte[] content, int offset, int length) { 
+			_params.AddLast (new BlobParam (content, offset, length));
+			return this;
+		}
+		public MessageEncoder Add (int seconds, int fraction) {
+			_params.AddLast (new TimeParam (seconds, fraction));
+			return this;
+		}
 
 		public byte[] Encode () {
 			var lenAddress = (_address.Length + 4) & ~3;
