@@ -24,6 +24,6 @@ Released as [UPM package](https://openupm.com/packages/jp.nobnak.osc/) on OpenUP
 var msg = new MessageEncoder("/path");
 msg.Add(3.14f);
 msg.Add(12345);
-var dest = new IPEndPoint("Client IP Address", "Client Port Number");
+var dest = new IPEndPoint("Server IP Address", "Server Port Number");
 oscPort.Send(msg, dest);
 ```
