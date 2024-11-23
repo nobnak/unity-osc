@@ -1,6 +1,6 @@
 unity-osc
 =========
-OSC for Unity
+OSC Sender/Receiver for Unity
 
 # Installation
 Released as [UPM package](https://openupm.com/packages/jp.nobnak.osc/) on OpenUPM.
