@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
-using UnityEngine.Profiling;
 using static Osc.OscPort;
 
-namespace Osc {
+namespace Osc2 {
 	public class OscReceiver : System.IDisposable {
 
         public event Action<Capsule> Receive;
@@ -23,7 +19,7 @@ namespace Osc {
         public OscReceiver(int localPort) {
             oscParser = new Parser();
             udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            receiveBuffer = new byte[ReceiveBufferSize];
+            receiveBuffer = new byte[MTU_SIZE];
             cancelSource = new CancellationTokenSource();
 
             udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
@@ -36,13 +32,22 @@ namespace Osc {
                 var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
                 while (udp != null) {
                     try {
+                        if (!udp.Poll(-1, SelectMode.SelectRead))
+                            continue;
+                        
+                        var length = udp.Receive(receiveBuffer, SocketFlags.Peek);
+                        if (length == 0)
+                            continue;
+
                         var fromendpoint = (EndPoint)clientEndpoint;
-                        var length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
+                        if (receiveBuffer == null || receiveBuffer.Length < length)
+                            receiveBuffer = new byte[length];
+                        length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
                         var fromipendpoint = fromendpoint as IPEndPoint;
                         if (length == 0 || fromipendpoint == null)
                             continue;
 
-                        oscParser.FeedData(receiveBuffer, length);
+                        oscParser.FeedData(receiveBuffer.AsSpan(0, length));
                         while (oscParser.MessageCount > 0) {
                             var msg = oscParser.PopMessage();
                             Receive?.Invoke(new Capsule(msg, fromipendpoint));
@@ -105,6 +110,7 @@ namespace Osc {
 
         #region declarations
         public const int E_CANCEL_BLOCKING_CALL = unchecked((int)0x80004005);
+        public const int MTU_SIZE = 1500;
         #endregion
     }
 }

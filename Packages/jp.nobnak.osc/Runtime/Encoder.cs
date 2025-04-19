@@ -4,37 +4,37 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Osc {
-	public class MessageEncoder {
+namespace Osc2 {
+	public class Encoder {
 		private string _address;
 		private LinkedList<IParam> _params;
 
-		public MessageEncoder (string address) {
+		public Encoder (string address) {
 			_address = address;
 			_params = new LinkedList<IParam> ();
 		}
 
-		public MessageEncoder Add (int content) {
+		public Encoder Add (int content) {
 			_params.AddLast (new Int32Param (content));
 			return this;
 		}
-		public MessageEncoder Add (float content) { 
+		public Encoder Add (float content) { 
 			_params.AddLast (new Float32Param (content));
 			return this;
 		}
-		public MessageEncoder Add (string content) { 
+		public Encoder Add (string content) { 
 			_params.AddLast (new StringParam (content));
 			return this;
 		}
-		public MessageEncoder Add (byte[] content) { 
+		public Encoder Add (byte[] content) { 
 			_params.AddLast (new BlobParam (content, 0, content.Length));
 			return this;
 		}
-		public MessageEncoder Add (byte[] content, int offset, int length) { 
+		public Encoder Add (byte[] content, int offset, int length) { 
 			_params.AddLast (new BlobParam (content, offset, length));
 			return this;
 		}
-		public MessageEncoder Add (int seconds, int fraction) {
+		public Encoder Add (int seconds, int fraction) {
 			_params.AddLast (new TimeParam (seconds, fraction));
 			return this;
 		}
