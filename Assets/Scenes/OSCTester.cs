@@ -1,9 +1,8 @@
-using Osc;
+using Osc2;
+using System.Net;
 using UnityEngine;
 
 public class OSCTester : MonoBehaviour {
-
-    public Presets presets = new();
 
     protected Coroutine worker;
 
@@ -23,33 +22,31 @@ public class OSCTester : MonoBehaviour {
     private System.Collections.IEnumerator SendWork() {
         yield return null;
 
-        var osc = presets.osc;
-        while (true) {
-            if (osc != null) {
-                var msg = new MessageEncoder("/test")
-                    .Add(123)
-                    .Add("hello")
-                    .Add(3.14f);
-                osc.Send(msg);
-                yield return null;
-            } else {
-                Debug.LogWarning("OSCTester.cs : SendWork : osc is null");
-                yield return new WaitForSeconds(1);
+        IPEndPoint remoteEndpoint = default;
+        using (var osc = new OscSender()) {
+            while (true) {
+                if (osc != null) {
+                    var msg = new Encoder("/test")
+                        .Add(123)
+                        .Add("hello")
+                        .Add(3.14f);
+                    osc.Send(msg.Encode(), remoteEndpoint);
+                    yield return null;
+                } else {
+                    Debug.LogWarning("OSCTester.cs : SendWork : osc is null");
+                    yield return new WaitForSeconds(1);
+                }
             }
         }
     }
     #endregion
 
     #region listener
-    public void OnReceive(OscPort.Capsule capsule) {
+    public void OnReceive(Capsule capsule) {
         Debug.LogFormat("OSCTester.cs : OnReceive : {0}", capsule.message);
     }
     #endregion
 
     #region declarations
-    [System.Serializable]
-    public class Presets {
-        public OscPort osc;
-    }
     #endregion
 }

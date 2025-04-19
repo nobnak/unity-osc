@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using static Osc.OscPort;
 
 namespace Osc2 {
 	public class OscReceiver : System.IDisposable {
