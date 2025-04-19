@@ -13,7 +13,6 @@ namespace Osc2 {
 
         protected Socket _udp;
 
-		#region unity
 		public OscSender() {
 			_udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 		}
