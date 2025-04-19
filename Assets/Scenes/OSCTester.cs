@@ -22,7 +22,7 @@ public class OSCTester : MonoBehaviour {
     private System.Collections.IEnumerator SendWork() {
         yield return null;
 
-        IPEndPoint remoteEndpoint = default;
+        IPEndPoint remoteEndpoint = new IPEndPoint("locaohost".FindFromHostName(), 10000);
         using (var osc = new OscSender()) {
             while (true) {
                 if (osc != null) {
