@@ -9,7 +9,13 @@ namespace Osc2 {
 		private string _address;
 		private LinkedList<IParam> _params;
 
-		public Encoder (string address) {
+        #region converter
+        public static implicit operator byte[](Encoder encoder) {
+            return encoder.Encode();
+        }
+        #endregion
+
+        public Encoder (string address) {
 			_address = address;
 			_params = new LinkedList<IParam> ();
 		}

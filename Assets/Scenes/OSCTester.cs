@@ -23,14 +23,14 @@ public class OSCTester : MonoBehaviour {
         yield return null;
 
         IPEndPoint remoteEndpoint = new IPEndPoint("locaohost".FindFromHostName(), 10000);
-        using (var osc = new OscSender()) {
+        using (var osc = new OscSender(remoteEndpoint)) {
             while (true) {
                 if (osc != null) {
                     var msg = new Encoder("/test")
                         .Add(123)
                         .Add("hello")
                         .Add(3.14f);
-                    osc.Send(msg.Encode(), remoteEndpoint);
+                    osc.Send(msg.Encode());
                     yield return null;
                 } else {
                     Debug.LogWarning("OSCTester.cs : SendWork : osc is null");
