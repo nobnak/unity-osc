@@ -86,10 +86,6 @@ namespace Osc2 {
             Error -= action;
             return this;
         }
-        public int ReceiveBufferSize {
-            get => udp.ReceiveBufferSize;
-            set => udp.ReceiveBufferSize = value;
-        }
         #endregion
     }
 }

@@ -36,27 +36,17 @@ public class OSCTester : MonoBehaviour {
         IPEndPoint remoteEndpoint = new IPEndPoint(host, port);
         using (var sender = new OscSender(remoteEndpoint)) {
             var counter = 0;
-            var batch = 1000;
             while (true) {
                 var msg = new Encoder("/test")
-                    .Add(counter++)
+                    .Add(1)
                     .Add("hello")
-                    .Add(Time.time);
+                    .Add(3.14f);
                 var data = msg.Encode();
 
-                if (counter % 2 == 0) {
-                    Profiler.BeginSample("SendWork async");
-                    for (var i = 0; i < batch; i++)
-                        sender.SendAsync(data);
-                    Profiler.EndSample();
-                } else {
-                    Profiler.BeginSample("SendWork sync");
-                    for (var i = 0; i < batch; i++)
-                        sender.Send(data);
-                    Profiler.EndSample();
-                }
+                sender.Send(data);
 
                 yield return null;
+                counter++;
             }
         }
     }

@@ -15,6 +15,17 @@ namespace Osc2 {
             this.udp = udp;
         }
 
+        #region Socket
+        public int ReceiveBufferSize {
+            get => udp.ReceiveBufferSize;
+            set => udp.ReceiveBufferSize = value;
+        }
+        public int SendBufferSize {
+            get => udp.SendBufferSize;
+            set => udp.SendBufferSize = value;
+        }
+        #endregion
+
         #region IDisposable
         public virtual void Dispose() {
             if (udp != null) {
@@ -23,11 +34,13 @@ namespace Osc2 {
                 u.Close();
             }
         }
-#endregion
+        #endregion
 
+        #region methods
         public void LogError(System.Exception e) {
             if (Error != null) Error(e); else Debug.LogError(e);
         }
+        #endregion
 
         #region declarations
         public const int E_CANCEL_BLOCKING_CALL = unchecked((int)0x80004005);
