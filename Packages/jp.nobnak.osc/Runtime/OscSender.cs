@@ -6,27 +6,13 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Osc2 {
-    public class OscSender : System.IDisposable {
-
-        public event System.Action<System.Exception> Error;
-
+    public class OscSender : OscSocket, System.IDisposable {
         protected IPEndPoint defaultRemote;
-        protected Socket udp;
 
-		public OscSender(IPEndPoint defaultRemote = null) {
+        public OscSender(IPEndPoint defaultRemote = null) {
             this.defaultRemote = defaultRemote;
-            this.udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 		}
         public OscSender(string host, int port) : this(new IPEndPoint(host.FindFromHostName(), port)) { }
-
-        #region IDisposable
-        public void Dispose() {
-			if (udp != null) {
-                udp.Dispose();
-                udp = null;
-            }
-		}
-        #endregion
 
         #region methods
         public void Send(byte[] oscData, IPEndPoint remote) {
@@ -73,15 +59,9 @@ namespace Osc2 {
             await SendAsync(oscData, defaultRemote);
         }
 
-        public OscSender LogError(System.Exception e) {
-            if (Error != null) Error(e); else Debug.LogError(e);
-            return this;
-        }
         #endregion
 
         #region declarations
-        public const int E_CANCEL_BLOCKING_CALL = unchecked((int)0x80004005);
-
         public struct SendAwaitable {
             private Socket sender;
             private byte[] data;

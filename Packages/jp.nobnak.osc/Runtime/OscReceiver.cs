@@ -4,43 +4,35 @@ using System.Net.Sockets;
 using System.Threading;
 
 namespace Osc2 {
-	public class OscReceiver : System.IDisposable {
+	public class OscReceiver : OscSocket {
 
         public event Action<Capsule> Receive;
-        public event Action<Exception> Error;
 
-        protected Socket udp;
 		protected byte[] receiveBuffer;
-        protected CancellationTokenSource cancelSource;
 		protected Thread reader;
         protected Parser oscParser;
 
         public OscReceiver(int localPort) {
             oscParser = new Parser();
-            udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             receiveBuffer = new byte[MTU_SIZE];
-            cancelSource = new CancellationTokenSource();
 
             udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
 
-            reader = new Thread(() => Reader(cancelSource.Token));
+            reader = new Thread(() => Reader());
             reader.IsBackground = true;
             reader.Start();
 
-            void Reader(CancellationToken token) {
+            void Reader() {
                 var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
                 while (udp != null) {
                     try {
-                        if (!udp.Poll(-1, SelectMode.SelectRead))
-                            continue;
-                        
-                        var length = udp.Receive(receiveBuffer, SocketFlags.Peek);
+                        var fromendpoint = (EndPoint)clientEndpoint;
+                        var length = udp.ReceiveFrom(receiveBuffer, SocketFlags.Peek, ref fromendpoint);
                         if (length == 0)
                             continue;
-
-                        var fromendpoint = (EndPoint)clientEndpoint;
                         if (receiveBuffer == null || receiveBuffer.Length < length)
                             receiveBuffer = new byte[length];
+
                         length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
                         var fromipendpoint = fromendpoint as IPEndPoint;
                         if (length == 0 || fromipendpoint == null)
@@ -51,29 +43,27 @@ namespace Osc2 {
                             var msg = oscParser.PopMessage();
                             Receive?.Invoke(new Capsule(msg, fromipendpoint));
                         }
-                    } catch (ThreadInterruptedException e) {
-#if UNITY_EDITOR
-                        UnityEngine.Debug.LogFormat("Reader thread interrupted:\n{0}", e);
-#endif
                     } catch (SocketException e) {
-                        if (udp != null && e.ErrorCode != E_CANCEL_BLOCKING_CALL)
-                            Error?.Invoke(e);
+                        if (e.ErrorCode != E_CANCEL_BLOCKING_CALL)
+                            LogError(e);
                     } catch (Exception e) {
-                        if (udp != null)
-                            Error?.Invoke(e);
+                        if (e is ThreadInterruptedException || e is ThreadAbortException) {
+#if UNITY_EDITOR && DEVELOPMENT_BUILD
+                            UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
+#endif
+                        } else {
+                            LogError(e);
+                        }
                     }
                 }
             }
         }
 
         #region IDisposable
-        public void Dispose() {
-            if (udp != null) {
-                var u = udp;
-                udp = null;
-                u.Close();
-            }
+        public override void Dispose() {
+            base.Dispose();
             if (reader != null) {
+                reader.Interrupt();
                 reader = null;
             }
         }
@@ -97,19 +87,9 @@ namespace Osc2 {
             return this;
         }
         public int ReceiveBufferSize {
-			get => udp.ReceiveBufferSize;
-			set {
-				if (value != udp.ReceiveBufferSize) {
-					udp.ReceiveBufferSize = value;
-					receiveBuffer = new byte[value];
-				}
-            }
-		}
-        #endregion
-
-        #region declarations
-        public const int E_CANCEL_BLOCKING_CALL = unchecked((int)0x80004005);
-        public const int MTU_SIZE = 1500;
+            get => udp.ReceiveBufferSize;
+            set => udp.ReceiveBufferSize = value;
+        }
         #endregion
     }
 }

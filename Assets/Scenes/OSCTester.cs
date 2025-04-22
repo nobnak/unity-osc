@@ -1,14 +1,23 @@
 using Osc2;
+using System.Collections;
 using System.Net;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class OSCTester : MonoBehaviour {
+
+    public Presets presets = new();
 
     protected Coroutine worker;
 
     #region unity
     private void OnEnable() {
-        worker = StartCoroutine(SendWork());
+        System.Func<IEnumerator> action = presets.mode switch {
+            TestMode.Sender => SendOnlyWork,
+            TestMode.Receiver => ReceiveOnlyWork,
+            _ => null,
+        };
+        worker = StartCoroutine(action());
     }
     private void OnDisable() {
         if (worker != null) {
@@ -19,23 +28,42 @@ public class OSCTester : MonoBehaviour {
     #endregion
 
     #region worker
-    private System.Collections.IEnumerator SendWork() {
+    private System.Collections.IEnumerator SendOnlyWork() {
         yield return null;
 
-        IPEndPoint remoteEndpoint = new IPEndPoint("locaohost".FindFromHostName(), 10000);
-        using (var osc = new OscSender(remoteEndpoint)) {
+        var host = presets.host.FindFromHostName();
+        var port = presets.port;
+        IPEndPoint remoteEndpoint = new IPEndPoint(host, port);
+        using (var sender = new OscSender(remoteEndpoint)) {
+            var counter = 0;
+            var batch = 1000;
             while (true) {
-                if (osc != null) {
-                    var msg = new Encoder("/test")
-                        .Add(123)
-                        .Add("hello")
-                        .Add(3.14f);
-                    osc.Send(msg.Encode());
-                    yield return null;
-                } else {
-                    Debug.LogWarning("OSCTester.cs : SendWork : osc is null");
-                    yield return new WaitForSeconds(1);
-                }
+                var msg = new Encoder("/test")
+                    .Add(counter++)
+                    .Add("hello")
+                    .Add(Time.time);
+                var data = msg.Encode();
+
+                Profiler.BeginSample("SendWork sync");
+                for (var i = 0; i < batch; i++)
+                    sender.Send(data);
+                Profiler.EndSample();
+
+                yield return null;
+            }
+        }
+    }
+    private System.Collections.IEnumerator ReceiveOnlyWork() {
+        yield return null;
+
+        var host = presets.host.FindFromHostName();
+        var port = presets.port;
+        IPEndPoint remoteEndpoint = new IPEndPoint(host, port);
+        using (var receiver = new OscReceiver(port)) {
+            receiver.Receive += OnReceive;
+
+            while (true) {
+                yield return null;
             }
         }
     }
@@ -43,10 +71,21 @@ public class OSCTester : MonoBehaviour {
 
     #region listener
     public void OnReceive(Capsule capsule) {
-        Debug.LogFormat("OSCTester.cs : OnReceive : {0}", capsule.message);
+        Debug.Log($"OSCTester.cs : OnReceive : {capsule.message}");
     }
     #endregion
 
     #region declarations
+
+    public enum TestMode {
+        Sender,
+        Receiver
+    }
+    [System.Serializable]
+    public class Presets {
+        public TestMode mode = TestMode.Sender;
+        public string host = "localhost";
+        public int port = 10000;
+    }
     #endregion
 }
