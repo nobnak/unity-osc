@@ -44,10 +44,17 @@ public class OSCTester : MonoBehaviour {
                     .Add(Time.time);
                 var data = msg.Encode();
 
-                Profiler.BeginSample("SendWork sync");
-                for (var i = 0; i < batch; i++)
-                    sender.Send(data);
-                Profiler.EndSample();
+                if (counter % 2 == 0) {
+                    Profiler.BeginSample("SendWork async");
+                    for (var i = 0; i < batch; i++)
+                        sender.SendAsync(data);
+                    Profiler.EndSample();
+                } else {
+                    Profiler.BeginSample("SendWork sync");
+                    for (var i = 0; i < batch; i++)
+                        sender.Send(data);
+                    Profiler.EndSample();
+                }
 
                 yield return null;
             }
