@@ -32,7 +32,7 @@ namespace Osc2 {
                         var length = 0;
                         try {
                             length = udp.ReceiveFrom(receiveBuffer, SocketFlags.Peek, ref fromendpoint);
-                            if (length == 0)
+                            if (length <= 0)
                                 continue;
                         } catch (ArgumentOutOfRangeException) {
                             length = Math.Max(length, udp.Available);
@@ -42,7 +42,7 @@ namespace Osc2 {
 
                         length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
                         var remote = fromendpoint as IPEndPoint;
-                        if (length == 0 || remote == null)
+                        if (length <= 0 || remote == null)
                             continue;
 
                         oscParser.FeedData(receiveBuffer.AsSpan(0, length));
