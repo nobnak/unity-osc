@@ -43,7 +43,23 @@ public class OSCTester : MonoBehaviour {
                     .Add(3.14f);
                 var data = msg.Encode();
 
-                sender.Send(data);
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var batch = 0;
+                if (counter % 2 == 0) {
+                    while (batch < 100 || sw.ElapsedMilliseconds < 1000f) {
+                        sender.Send(data);
+                        batch++;
+                    }
+                    sw.Stop();
+                    Debug.Log($"Send sync: {1e3 * sw.ElapsedMilliseconds / batch}ns");
+                } else {
+                    while (batch < 100 || sw.ElapsedMilliseconds < 1000f) {
+                        sender.SendAsync(data);
+                        batch++;
+                    }
+                    sw.Stop();
+                    Debug.Log($"Send async: {1e3 * sw.ElapsedMilliseconds / batch}ns");
+                }
 
                 yield return null;
                 counter++;

@@ -63,7 +63,7 @@ namespace Osc2 {
         public override void Dispose() {
             base.Dispose();
             if (reader != null) {
-                reader.Interrupt();
+                reader.Abort();
                 reader = null;
             }
         }

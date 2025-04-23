@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -6,30 +8,70 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Osc2 {
-    public class OscSender : OscSocket, System.IDisposable {
+    public class OscSender : OscSocket {
+
         protected IPEndPoint defaultRemote;
+        protected Thread sender;
+        protected BlockingCollection<SendData> sendBuffer;
 
         public OscSender(IPEndPoint defaultRemote = null) {
             this.defaultRemote = defaultRemote;
-		}
+            sendBuffer = new();
+
+            sender = new Thread(() => Sender());
+            sender.IsBackground = true;
+            sender.Start();
+
+            void Sender() {
+                while (udp != null) {
+                    try { 
+                        var s = sendBuffer.Take();
+                        Send(s.data, s.remote);
+                    } catch (SocketException e) {
+                        if (e.ErrorCode != E_CANCEL_BLOCKING_CALL)
+                            LogError(e);
+                    } catch (Exception e) {
+                        if (e is ThreadInterruptedException || e is ThreadAbortException) {
+#if UNITY_EDITOR && DEVELOPMENT_BUILD
+                            UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
+#endif
+                        } else {
+                            LogError(e);
+                        }
+                    }
+                }
+            }
+        }
         public OscSender(string host, int port) : this(new IPEndPoint(host.FindFromHostName(), port)) { }
+
+        #region IDisposable
+        public override void Dispose() {
+            if (sender != null) {
+                sender.Interrupt();
+                sender = null;
+            }
+            base.Dispose();
+        }
+        #endregion
 
         #region methods
         public void Send(byte[] oscData, IPEndPoint remote) {
             if (udp == null) return;
             try {
 				udp.SendTo(oscData, remote);
-            } catch (ThreadInterruptedException e) {
-#if UNITY_EDITOR
-				Debug.LogFormat("Sender thread interrupted:\n{0}",e);
-#endif
 			} catch (SocketException e) {
 				if (e.ErrorCode != E_CANCEL_BLOCKING_CALL)
                     LogError(e);
-			} catch(System.Exception e) {
-                LogError(e);
+            } catch (Exception e) {
+                if (e is ThreadInterruptedException || e is ThreadAbortException) {
+#if UNITY_EDITOR && DEVELOPMENT_BUILD
+                            UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
+#endif
+                } else {
+                    LogError(e);
+                }
             }
-		}
+        }
         public void Send(byte[] oscData) {
             if (defaultRemote == null) {
                 throw new System.InvalidOperationException("defaultRemote is null");
@@ -37,31 +79,28 @@ namespace Osc2 {
             Send(oscData, defaultRemote);
         }
 
-        public async Task SendAsync(byte[] oscData, IPEndPoint remote) {
+        public void SendAsync(byte[] oscData, IPEndPoint remote) {
             if (udp == null) return;
-            try {
-                await new SendAwaitable(udp, oscData, remote);
-            } catch (ThreadInterruptedException e) {
-#if UNITY_EDITOR
-                Debug.LogFormat("Sender thread interrupted:\n{0}", e);
-#endif
-            } catch (SocketException e) {
-                if (e.ErrorCode != E_CANCEL_BLOCKING_CALL)
-                    LogError(e);
-            } catch (System.Exception e) {
-                LogError(e);
-            }
+            sendBuffer.Add(new SendData(remote, oscData));
         }
-        public async Task SendAsync(byte[] oscData) {
+        public void SendAsync(byte[] oscData) {
             if (defaultRemote == null) {
                 throw new System.InvalidOperationException("defaultRemote is null");
             }
-            await SendAsync(oscData, defaultRemote);
+            SendAsync(oscData, defaultRemote);
         }
 
         #endregion
 
         #region declarations
+        public struct SendData {
+            public readonly IPEndPoint remote;
+            public readonly byte[] data;
+            public SendData(IPEndPoint remote, byte[] data) {
+                this.remote = remote;
+                this.data = data;
+            }
+        }
         public struct SendAwaitable {
             private Socket sender;
             private byte[] data;
