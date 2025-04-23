@@ -50,16 +50,18 @@ public class OSCTester : MonoBehaviour {
 
                 var sw = System.Diagnostics.Stopwatch.StartNew();
                 var batchCount = 0;
-                var batch = 1000;
+                var batch = 10000;
                 if (counter % 2 == 0) {
-                    for (batchCount = 0; batchCount < batch; batchCount++) {
+                    while (batchCount < batch && sw.ElapsedMilliseconds < 100) {
                         sender.Send(dataSync);
+                        batchCount++;
                     }
                     sw.Stop();
                     Debug.Log($"Send sync: {1e3 * sw.ElapsedMilliseconds / batchCount}ns");
                 } else {
-                    for (batchCount = 0; batchCount < batch; batchCount++) {
+                    while (batchCount < batch && sw.ElapsedMilliseconds < 100) {
                         sender.SendAsync(dataAsync);
+                        batchCount++;
                     }
                     sw.Stop();
                     Debug.Log($"Send async: {1e3 * sw.ElapsedMilliseconds / batchCount}ns");
