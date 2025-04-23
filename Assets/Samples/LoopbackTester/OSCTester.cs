@@ -75,9 +75,7 @@ public class OSCTester : MonoBehaviour {
     private System.Collections.IEnumerator ReceiveOnlyWork() {
         yield return null;
 
-        var host = presets.host.FindFromHostName();
         var port = presets.port;
-        IPEndPoint remoteEndpoint = new IPEndPoint(host, port);
         using (var receiver = new OscReceiver(port)) {
             receiver.Receive += OnReceive;
 

@@ -6,8 +6,8 @@ using System.Text;
 
 namespace Osc2 {
 	public class Encoder {
-		private string _address;
-		private LinkedList<IParam> _params;
+		public string Path { get; protected set; }
+		public LinkedList<IParam> Params { get; protected set; }
 
         #region converter
         public static implicit operator byte[](Encoder encoder) {
@@ -15,55 +15,55 @@ namespace Osc2 {
         }
         #endregion
 
-        public Encoder (string address) {
-			_address = address;
-			_params = new LinkedList<IParam> ();
+        public Encoder (string path) {
+			Path = path;
+			Params = new LinkedList<IParam> ();
 		}
 
 		public Encoder Add (int content) {
-			_params.AddLast (new Int32Param (content));
+			Params.AddLast (new Int32Param (content));
 			return this;
 		}
 		public Encoder Add (float content) { 
-			_params.AddLast (new Float32Param (content));
+			Params.AddLast (new Float32Param (content));
 			return this;
 		}
 		public Encoder Add (string content) { 
-			_params.AddLast (new StringParam (content));
+			Params.AddLast (new StringParam (content));
 			return this;
 		}
 		public Encoder Add (byte[] content) { 
-			_params.AddLast (new BlobParam (content, 0, content.Length));
+			Params.AddLast (new BlobParam (content, 0, content.Length));
 			return this;
 		}
 		public Encoder Add (byte[] content, int offset, int length) { 
-			_params.AddLast (new BlobParam (content, offset, length));
+			Params.AddLast (new BlobParam (content, offset, length));
 			return this;
 		}
 		public Encoder Add (int seconds, int fraction) {
-			_params.AddLast (new TimeParam (seconds, fraction));
+			Params.AddLast (new TimeParam (seconds, fraction));
 			return this;
 		}
 
 		public byte[] Encode () {
-			var lenAddress = (_address.Length + 4) & ~3;
-			var lenTags = (_params.Count + 5) & ~3;
+			var lenAddress = (Path.Length + 4) & ~3;
+			var lenTags = (Params.Count + 5) & ~3;
 			var lenDatas = 0;
-			foreach (var p in _params)
+			foreach (var p in Params)
 				lenDatas += p.Length;
 			var bytedata = new byte[lenAddress + lenTags + lenDatas];
 
 			var offset = 0;
-			Encoding.UTF8.GetBytes (_address, 0, _address.Length, bytedata, offset);
+			Encoding.UTF8.GetBytes (Path, 0, Path.Length, bytedata, offset);
 			offset += lenAddress;
 
 			bytedata [offset] = (byte)',';
 			var addOffset = 0;
-			foreach (var p in _params)
+			foreach (var p in Params)
 				bytedata [offset + ++addOffset] = p.Tag;
 			offset += lenTags;
 
-			foreach (var p in _params) {
+			foreach (var p in Params) {
 				p.Assign (bytedata, offset);
 				offset += p.Length;
 			}

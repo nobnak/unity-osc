@@ -9,15 +9,17 @@ namespace Osc2 {
 
     public struct Capsule {
         public Message message;
-        public IPEndPoint ip;
+        public IPEndPoint local;
+        public IPEndPoint remote;
 
-        public Capsule(Message message, IPEndPoint ip) {
+        public Capsule(Message message, IPEndPoint local, IPEndPoint remote) {
             this.message = message;
-            this.ip = ip;
+            this.local = local;
+            this.remote = remote;
         }
 
         public override string ToString() {
-            return string.Format("{0}, {1}", ip, message);
+            return $"{nameof(Capsule)}: {remote}->{local}\n{message}";
         }
     }
     public struct Message {

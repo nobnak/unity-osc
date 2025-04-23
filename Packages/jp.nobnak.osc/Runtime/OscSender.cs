@@ -31,7 +31,9 @@ namespace Osc2 {
                         if (e.ErrorCode != E_CANCEL_BLOCKING_CALL)
                             LogError(e);
                     } catch (Exception e) {
-                        if (e is ThreadInterruptedException || e is ThreadAbortException) {
+                        if (e is ThreadInterruptedException 
+                            || e is ThreadAbortException
+                            || e is ArgumentNullException) {
 #if UNITY_EDITOR && DEVELOPMENT_BUILD
                             UnityEngine.Debug.Log($"Reader thread interrupted:\n{e}");
 #endif

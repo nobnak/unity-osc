@@ -38,7 +38,7 @@ namespace Osc2 {
 
         #region methods
         public void LogError(System.Exception e) {
-            if (Error != null) Error(e); else Debug.LogError(e);
+            if (Error != null) Error?.Invoke(e); else Debug.LogError(e);
         }
         #endregion
 

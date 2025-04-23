@@ -11,12 +11,14 @@ namespace Osc2 {
 		protected byte[] receiveBuffer;
 		protected Thread reader;
         protected Parser oscParser;
+        protected IPEndPoint local;
 
         public OscReceiver(int localPort) {
             oscParser = new Parser();
             receiveBuffer = new byte[MTU_SIZE];
+            local = new IPEndPoint(IPAddress.Any, localPort);
 
-            udp.Bind(new IPEndPoint(IPAddress.Any, localPort));
+            udp.Bind(local);
 
             reader = new Thread(() => Reader());
             reader.IsBackground = true;
@@ -34,14 +36,14 @@ namespace Osc2 {
                             receiveBuffer = new byte[length];
 
                         length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
-                        var fromipendpoint = fromendpoint as IPEndPoint;
-                        if (length == 0 || fromipendpoint == null)
+                        var remote = fromendpoint as IPEndPoint;
+                        if (length == 0 || remote == null)
                             continue;
 
                         oscParser.FeedData(receiveBuffer.AsSpan(0, length));
                         while (oscParser.MessageCount > 0) {
                             var msg = oscParser.PopMessage();
-                            Receive?.Invoke(new Capsule(msg, fromipendpoint));
+                            Receive?.Invoke(new Capsule(msg, local, remote));
                         }
                     } catch (SocketException e) {
                         if (e.ErrorCode != E_CANCEL_BLOCKING_CALL)
