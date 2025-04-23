@@ -57,14 +57,14 @@ public class OSCTester : MonoBehaviour {
                         batchCount++;
                     }
                     sw.Stop();
-                    Debug.Log($"Send sync: {1e3 * sw.ElapsedMilliseconds / batchCount}ns");
+                    Debug.Log($"Send sync: {1e3 * sw.ElapsedMilliseconds / batchCount:f1}us");
                 } else {
                     while (batchCount < batch && sw.ElapsedMilliseconds < 100) {
                         sender.SendAsync(dataAsync);
                         batchCount++;
                     }
                     sw.Stop();
-                    Debug.Log($"Send async: {1e3 * sw.ElapsedMilliseconds / batchCount}ns");
+                    Debug.Log($"Send async: {1e3 * sw.ElapsedMilliseconds / batchCount:f1}us");
                 }
 
                 yield return null;
@@ -88,7 +88,8 @@ public class OSCTester : MonoBehaviour {
 
     #region listener
     public void OnReceive(Capsule capsule) {
-        Debug.Log($"OSCTester.cs : OnReceive : {capsule.message}");
+        if (presets.verbose)
+            Debug.Log($"OnReceive : {capsule}");
     }
     #endregion
 
@@ -100,6 +101,7 @@ public class OSCTester : MonoBehaviour {
     }
     [System.Serializable]
     public class Presets {
+        public bool verbose = false;
         public TestMode mode = TestMode.Sender;
         public string host = "localhost";
         public int port = 10000;

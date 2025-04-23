@@ -29,10 +29,15 @@ namespace Osc2 {
                 while (udp != null) {
                     try {
                         var fromendpoint = (EndPoint)clientEndpoint;
-                        var length = udp.ReceiveFrom(receiveBuffer, SocketFlags.Peek, ref fromendpoint);
-                        if (length == 0)
-                            continue;
-                        if (receiveBuffer == null || receiveBuffer.Length < length)
+                        var length = 0;
+                        try {
+                            length = udp.ReceiveFrom(receiveBuffer, SocketFlags.Peek, ref fromendpoint);
+                            if (length == 0)
+                                continue;
+                        } catch (ArgumentOutOfRangeException) {
+                            length = Math.Max(length, udp.Available);
+                        }
+                        if (receiveBuffer.Length < length)
                             receiveBuffer = new byte[length];
 
                         length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
