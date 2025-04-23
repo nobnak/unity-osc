@@ -37,28 +37,32 @@ public class OSCTester : MonoBehaviour {
         using (var sender = new OscSender(remoteEndpoint)) {
             var counter = 0;
             while (true) {
-                var msg = new Encoder("/test")
+                var msgSync = new Encoder("/sync")
                     .Add(1)
                     .Add("hello")
                     .Add(3.14f);
-                var data = msg.Encode();
+                var msgAsync = new Encoder("/async")
+                    .Add(1)
+                    .Add("hello")
+                    .Add(3.14f);
+                var dataSync = msgSync.Encode();
+                var dataAsync = msgAsync.Encode();
 
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var batch = 0;
+                var batchCount = 0;
+                var batch = 1000;
                 if (counter % 2 == 0) {
-                    while (batch < 100 || sw.ElapsedMilliseconds < 1000f) {
-                        sender.Send(data);
-                        batch++;
+                    for (batchCount = 0; batchCount < batch; batchCount++) {
+                        sender.Send(dataSync);
                     }
                     sw.Stop();
-                    Debug.Log($"Send sync: {1e3 * sw.ElapsedMilliseconds / batch}ns");
+                    Debug.Log($"Send sync: {1e3 * sw.ElapsedMilliseconds / batchCount}ns");
                 } else {
-                    while (batch < 100 || sw.ElapsedMilliseconds < 1000f) {
-                        sender.SendAsync(data);
-                        batch++;
+                    for (batchCount = 0; batchCount < batch; batchCount++) {
+                        sender.SendAsync(dataAsync);
                     }
                     sw.Stop();
-                    Debug.Log($"Send async: {1e3 * sw.ElapsedMilliseconds / batch}ns");
+                    Debug.Log($"Send async: {1e3 * sw.ElapsedMilliseconds / batchCount}ns");
                 }
 
                 yield return null;

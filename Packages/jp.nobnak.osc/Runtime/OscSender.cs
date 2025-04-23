@@ -46,11 +46,16 @@ namespace Osc2 {
 
         #region IDisposable
         public override void Dispose() {
+            base.Dispose();
+            if (sendBuffer != null) {
+                sendBuffer.CompleteAdding();
+                sendBuffer.Dispose();
+                sendBuffer = null;
+            }
             if (sender != null) {
-                sender.Interrupt();
+                sender.Abort();
                 sender = null;
             }
-            base.Dispose();
         }
         #endregion
 
