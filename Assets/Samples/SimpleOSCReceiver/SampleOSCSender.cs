@@ -5,11 +5,11 @@ using UnityEngine.Events;
 
 namespace Osc2.Samples {
 
-    public class SampleDataSender : MonoBehaviour {
+    public class SampleOSCSender : MonoBehaviour {
 
         [SerializeField] protected Config config = new();
 
-        protected List<OscSender> senders = new();
+        protected List<OscSender> senders = new(); 
 
         #region unity
         private void OnEnable() {

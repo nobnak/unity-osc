@@ -6,17 +6,12 @@
   "name": "jp.nobnak.osc",
   "displayName": "OSC",
   "description": "Open Sound Control (OSC) for Unity3D",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "samples": [
     {
-      "displayName": "LoopbackTester",
-      "description": "LoopbackTester",
-      "path": "Samples~/LoopbackTester"
-    },
-    {
-      "displayName": "SimpleOSCReceiver",
-      "description": "SimpleOSCReceiver",
-      "path": "Samples~/SimpleOSCReceiver"
+      "displayName": "Samples",
+      "description": "Sample scenes for OSC",
+      "path": "Samples~"
     }
   ]
 }

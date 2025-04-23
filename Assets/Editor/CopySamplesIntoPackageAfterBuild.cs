@@ -7,18 +7,22 @@ public class CopySamplesIntoPackageAfterBuild {
     [DidReloadScripts(1)]
     static void OnDidReloadScripts() {
         // Copy the samples from the Assets/Samples folder to the package's Samples folder
-        string sourcePath = "Assets/Samples";
-        string destinationPath = "Packages/jp.nobnak.osc/Samples~";
-        if (Directory.Exists(sourcePath)) {
-            if (Directory.Exists(destinationPath)) {
-                Directory.Delete(destinationPath, true);
+        string sourceFolder = "Assets/Samples";
+        string destinationFolder = "Packages/jp.nobnak.osc/Samples~";
+        if (Directory.Exists(sourceFolder)) {
+            if (Directory.Exists(destinationFolder)) {
+                Directory.Delete(destinationFolder, true);
             }
-            Directory.CreateDirectory(destinationPath);
+            Directory.CreateDirectory(destinationFolder);
 
-            foreach (var file in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories)) {
-                var srcFile = new FileInfo(file);
-                var  destFile = new FileInfo(Path.Combine(destinationPath, srcFile.Name));
-                File.Copy(file, destFile.FullName, true);
+            foreach (var srcPath in Directory.GetFiles(sourceFolder, "*.*", SearchOption.AllDirectories)) {
+                var relativePath = Path.GetRelativePath(sourceFolder, srcPath);
+                var  dstPath = Path.Combine(destinationFolder, relativePath);
+                var dstDir = Path.GetDirectoryName(dstPath);
+                if (!Directory.Exists(dstDir)) {
+                    Directory.CreateDirectory(dstDir);
+                }
+                File.Copy(srcPath, dstPath, true);
             }
         } else {
             Debug.LogWarning("Source samples directory does not exist.");
