@@ -31,7 +31,7 @@ namespace Osc2 {
             if (udp != null) {
                 var u = udp;
                 udp = null;
-                u.Close();
+                u.Dispose();
             }
         }
         #endregion

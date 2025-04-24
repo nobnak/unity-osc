@@ -28,7 +28,7 @@ namespace Osc2 {
                 var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
                 while (udp != null) {
                     try {
-                        if (!udp.Poll(1000, SelectMode.SelectRead)) {
+                        if (!udp.Poll(100, SelectMode.SelectRead)) {
                             continue;
                         }
                         var length = udp.Available;
