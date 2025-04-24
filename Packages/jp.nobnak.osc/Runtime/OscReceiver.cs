@@ -28,18 +28,17 @@ namespace Osc2 {
                 var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
                 while (udp != null) {
                     try {
-                        var fromendpoint = (EndPoint)clientEndpoint;
-                        var length = 0;
-                        try {
-                            length = udp.ReceiveFrom(receiveBuffer, SocketFlags.Peek, ref fromendpoint);
-                            if (length <= 0)
-                                continue;
-                        } catch (ArgumentOutOfRangeException) {
-                            length = Math.Max(length, udp.Available);
+                        if (!udp.Poll(1000, SelectMode.SelectRead)) {
+                            continue;
                         }
+                        var length = udp.Available;
+                        if (length <= 0)
+                            continue;
+
                         if (receiveBuffer.Length < length)
                             receiveBuffer = new byte[length];
 
+                        var fromendpoint = (EndPoint)clientEndpoint;
                         length = udp.ReceiveFrom(receiveBuffer, ref fromendpoint);
                         var remote = fromendpoint as IPEndPoint;
                         if (length <= 0 || remote == null)
