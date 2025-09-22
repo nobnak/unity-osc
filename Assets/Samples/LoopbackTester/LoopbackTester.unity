@@ -456,9 +456,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   presets:
+    verbose: 1
     mode: 1
     host: localhost
     port: 10000
+    batch: 10000
 --- !u!4 &1605171148
 Transform:
   m_ObjectHideFlags: 0
@@ -504,9 +506,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   presets:
+    verbose: 0
     mode: 0
     host: localhost
     port: 10000
+    batch: 1000
 --- !u!4 &1944681408
 Transform:
   m_ObjectHideFlags: 0

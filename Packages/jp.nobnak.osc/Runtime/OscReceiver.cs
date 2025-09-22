@@ -18,6 +18,7 @@ namespace Osc2 {
             receiveBuffer = new byte[MTU_SIZE];
             local = new IPEndPoint(IPAddress.Any, localPort);
 
+            udp.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             udp.Bind(local);
 
             reader = new Thread(() => Reader());

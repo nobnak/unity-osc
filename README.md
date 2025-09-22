@@ -13,45 +13,85 @@ Released as [UPM package](https://openupm.com/packages/jp.nobnak.osc/) on OpenUP
 ## Samples
 See the SimpleOSCReceiver scene in the package examples to see how to receive OSC packets.
 
-## Set Up a Receiver
-```C#
-StartCoroutine(Receiver());
-System.Collections.IEnumerator Receiver() {
-    yield return null;
+## Important Note about Resource Management
+**重要**: Coroutine内で`using`を使用すると、Coroutineが途中で停止された場合にDisposeが呼ばれない可能性があります。OSCのSender/ReceiverはOnEnableで初期化し、OnDisableで明示的にDisposeするようにし、Coroutineでは送信/受信処理のみを分離してください。
 
-    var port = 10000;
-    using (var recv = new OscReceiver(port)) {
-        recv.Receive += (capsule) => {
-            Debug.Log(capsule);
-        };
-        recv.Error += (e) => {
+## Set Up a Receiver (MonoBehaviour Example)
+```C#
+public class OSCReceiverExample : MonoBehaviour {
+    protected OscReceiver receiver;
+
+    private void OnEnable() {
+        // Initialize receiver in OnEnable - no coroutine needed!
+        var port = 10000;
+        receiver = new OscReceiver(port);
+        receiver.Receive += OnReceive;
+        receiver.Error += (e) => {
             Debug.LogError(e);
         };
+        // Receiver works with events - no coroutine required
+    }
 
-        while (true) {
-            yield return null;
+    private void OnDisable() {
+        // Dispose receiver
+        if (receiver != null) {
+            receiver.Dispose();
+            receiver = null;
         }
+    }
+
+    void OnReceive(Capsule capsule) {
+        Debug.Log(capsule);
     }
 }
 ```
 
-## Set Up a Sender
+## Set Up a Sender (MonoBehaviour Example)
 ```C#
-StartCoroutine(Sender());
-System.Collections.IEnumerator Sender() {
-    yield return null;
+public class OSCSenderExample : MonoBehaviour {
+    protected IEnumerator senderEnumerator;
+    protected Coroutine senderCoroutine;
+    protected OscSender sender;
 
-    var host = "localhost";
-    var port = 10000;
-    using (var sndr = new OscSender(host, port)) {
-        while (true) {
+    private void OnEnable() {
+        // Initialize sender in OnEnable, not in Coroutine
+        var host = "localhost";
+        var port = 10000;
+        sender = new OscSender(host, port);
+        sender.Error += (e) => {
+            Debug.LogError(e);
+        };
+
+        // Start coroutine for sending only
+        senderEnumerator = SendWork();
+        senderCoroutine = StartCoroutine(senderEnumerator);
+    }
+
+    private void OnDisable() {
+        // Stop coroutine first
+        if (senderCoroutine != null) {
+            StopCoroutine(senderCoroutine);
+            senderCoroutine = null;
+            senderEnumerator = null;
+        }
+
+        // Then dispose sender
+        if (sender != null) {
+            sender.Dispose();
+            sender = null;
+        }
+    }
+
+    System.Collections.IEnumerator SendWork() {
+        // Coroutine only handles sending, not resource management
+        while (isActiveAndEnabled) {
             var msg = new Encoder("/async")
                 .Add(1)
                 .Add("hello")
                 .Add(3.14f);
-            sndr.SendAsync(msg);
+            sender.SendAsync(msg);
 
-            yield return null;
+            yield return new WaitForSeconds(0.1f);
         }
     }
 }
