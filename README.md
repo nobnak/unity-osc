@@ -1,108 +1,182 @@
-unity-osc
-=========
-OSC Sender/Receiver for Unity
+# unity-osc
 
-# Installation
-Released as [UPM package](https://openupm.com/packages/jp.nobnak.osc/) on OpenUPM.
+OSC (Open Sound Control) Sender/Receiver library for Unity
 
-- Add URL "https://package.openupm.com" in a Scoped Registry
-- Add scope "jp.nobnak"
-- Add package "jp.nobnak.osc".
+## Installation
 
-# Usage
-## Samples
-See the SimpleOSCReceiver scene in the package examples to see how to receive OSC packets.
+Available as a [UPM package](https://openupm.com/packages/jp.nobnak.osc/) on OpenUPM.
 
-## Important Note about Resource Management
-**重要**: Coroutine内で`using`を使用すると、Coroutineが途中で停止された場合にDisposeが呼ばれない可能性があります。OSCのSender/ReceiverはOnEnableで初期化し、OnDisableで明示的にDisposeするようにし、Coroutineでは送信/受信処理のみを分離してください。
+1. Add URL "https://package.openupm.com" as a Scoped Registry
+2. Add scope "jp.nobnak"
+3. Add package "jp.nobnak.osc"
 
-## Set Up a Receiver (MonoBehaviour Example)
-```C#
-public class OSCReceiverExample : MonoBehaviour {
-    protected OscReceiver receiver;
+## Features
 
-    private void OnEnable() {
-        // Initialize receiver in OnEnable - no coroutine needed!
+- **High-performance OSC communication** optimized for Unity
+- **Event-driven receiver** - no polling required
+- **Thread-safe implementation** for reliable data transfer
+- **Memory-efficient** design with proper resource management
+
+## Quick Start
+
+### Receiving OSC Messages
+
+The receiver works entirely with events - no coroutines needed!
+
+```csharp
+public class OSCReceiverExample : MonoBehaviour 
+{
+    private OscReceiver receiver;
+
+    void OnEnable() 
+    {
         var port = 10000;
         receiver = new OscReceiver(port);
-        receiver.Receive += OnReceive;
-        receiver.Error += (e) => {
-            Debug.LogError(e);
-        };
-        // Receiver works with events - no coroutine required
+        receiver.Receive += OnReceiveOSC;
+        receiver.Error += OnError;
     }
 
-    private void OnDisable() {
-        // Dispose receiver
-        if (receiver != null) {
-            receiver.Dispose();
-            receiver = null;
-        }
+    void OnDisable() 
+    {
+        receiver?.Dispose();
+        receiver = null;
     }
 
-    void OnReceive(Capsule capsule) {
-        Debug.Log(capsule);
+    void OnReceiveOSC(Capsule capsule) 
+    {
+        Debug.Log($"Received: {capsule}");
+    }
+
+    void OnError(System.Exception error) 
+    {
+        Debug.LogError($"OSC Error: {error}");
     }
 }
 ```
 
-## Set Up a Sender (MonoBehaviour Example)
-```C#
-public class OSCSenderExample : MonoBehaviour {
-    protected IEnumerator senderEnumerator;
-    protected Coroutine senderCoroutine;
-    protected OscSender sender;
+### Sending OSC Messages
 
-    private void OnEnable() {
-        // Initialize sender in OnEnable, not in Coroutine
+For continuous sending, use a coroutine for the sending logic only:
+
+```csharp
+public class OSCSenderExample : MonoBehaviour 
+{
+    private OscSender sender;
+    private Coroutine sendingCoroutine;
+
+    void OnEnable() 
+    {
         var host = "localhost";
         var port = 10000;
         sender = new OscSender(host, port);
-        sender.Error += (e) => {
-            Debug.LogError(e);
-        };
+        sender.Error += OnError;
 
-        // Start coroutine for sending only
-        senderEnumerator = SendWork();
-        senderCoroutine = StartCoroutine(senderEnumerator);
+        sendingCoroutine = StartCoroutine(SendingLoop());
     }
 
-    private void OnDisable() {
-        // Stop coroutine first
-        if (senderCoroutine != null) {
-            StopCoroutine(senderCoroutine);
-            senderCoroutine = null;
-            senderEnumerator = null;
+    void OnDisable() 
+    {
+        if (sendingCoroutine != null) 
+        {
+            StopCoroutine(sendingCoroutine);
+            sendingCoroutine = null;
         }
 
-        // Then dispose sender
-        if (sender != null) {
-            sender.Dispose();
-            sender = null;
-        }
+        sender?.Dispose();
+        sender = null;
     }
 
-    System.Collections.IEnumerator SendWork() {
-        // Coroutine only handles sending, not resource management
-        while (isActiveAndEnabled) {
-            var msg = new Encoder("/async")
-                .Add(1)
+    IEnumerator SendingLoop() 
+    {
+        while (isActiveAndEnabled) 
+        {
+            var message = new Encoder("/test")
+                .Add(Time.time)
                 .Add("hello")
-                .Add(3.14f);
-            sender.SendAsync(msg);
+                .Add(Random.Range(0f, 100f));
 
+            sender.SendAsync(message);
             yield return new WaitForSeconds(0.1f);
         }
+    }
+
+    void OnError(System.Exception error) 
+    {
+        Debug.LogError($"OSC Error: {error}");
     }
 }
 ```
 
-## Send a Message
-```C#
- var msg = new Encoder("/test")
-     .Add(123)
-     .Add("hello")
-     .Add(3.14f);
-sender.SendAsync(msg);
-//sender.Send(msg, dest);
+### One-time Message Sending
+
+For sending individual messages without coroutines:
+
+```csharp
+public class SimpleOSCSender : MonoBehaviour 
+{
+    private OscSender sender;
+
+    void Start() 
+    {
+        sender = new OscSender("localhost", 10000);
+    }
+
+    void OnDestroy() 
+    {
+        sender?.Dispose();
+    }
+
+    public void SendMessage() 
+    {
+        var message = new Encoder("/button/pressed")
+            .Add(1)
+            .Add("click");
+            
+        sender.SendAsync(message);
+    }
+}
 ```
+
+## Message Building
+
+Use the `Encoder` class to build OSC messages:
+
+```csharp
+var message = new Encoder("/osc/address")
+    .Add(123)           // int
+    .Add(3.14f)         // float
+    .Add("text")        // string
+    .Add(true);         // bool
+
+// Send asynchronously (recommended)
+sender.SendAsync(message);
+
+// Send synchronously (blocks until sent)
+sender.Send(message.Encode());
+```
+
+## Important Notes
+
+### Resource Management
+- **Always dispose** OSC objects in `OnDisable()` or `OnDestroy()`
+- **Initialize in OnEnable()**, not inside coroutines
+- **Avoid `using` statements inside coroutines** - they may not dispose properly if the coroutine is stopped
+
+### Performance Tips
+- Use `SendAsync()` for better performance (non-blocking)
+- Receivers work with events - no polling or coroutines needed
+- Only use coroutines for continuous sending logic
+
+### Thread Safety
+- All callbacks (Receive, Error) are thread-safe
+- You can safely update Unity objects from OSC callbacks
+
+## Examples
+
+Check out the included sample scenes:
+- `SimpleOSCReceiver` - Basic receiver setup
+- `LoopbackTester` - Performance testing and debugging
+
+## License
+
+See [LICENSE](LICENSE) file for details.
