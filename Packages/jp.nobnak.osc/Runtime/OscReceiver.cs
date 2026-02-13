@@ -13,8 +13,8 @@ namespace Osc2 {
         protected Parser oscParser;
         protected IPEndPoint local;
 
-        public OscReceiver(int localPort) {
-            oscParser = new Parser();
+        public OscReceiver(int localPort, bool useStringCaching = false) {
+            oscParser = useStringCaching ? new Parser(true) : new Parser();
             receiveBuffer = new byte[MTU_SIZE];
             local = new IPEndPoint(IPAddress.Any, localPort);
 
@@ -29,7 +29,7 @@ namespace Osc2 {
                 var clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
                 while (udp != null) {
                     try {
-                        if (!udp.Poll(100, SelectMode.SelectRead)) {
+                        if (!udp.Poll(1, SelectMode.SelectRead)) {
                             continue;
                         }
                         var length = udp.Available;
