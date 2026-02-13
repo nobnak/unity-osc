@@ -70,11 +70,11 @@ public class OSCTester : MonoBehaviour {
         while (isActiveAndEnabled && sender != null) {
             var msgSync = new Encoder("/sync")
                 .Add(1)
-                .Add("hello")
+                .Add($"hello{counter%10}")
                 .Add(3.14f);
             var msgAsync = new Encoder("/async")
                 .Add(1)
-                .Add("hello")
+                .Add($"hello{counter%10}")
                 .Add(3.14f);
             var dataSync = msgSync.Encode();
             var dataAsync = msgAsync.Encode();
