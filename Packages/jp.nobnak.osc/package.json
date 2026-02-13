@@ -6,7 +6,7 @@
   "name": "jp.nobnak.osc",
   "displayName": "OSC",
   "description": "Open Sound Control (OSC) for Unity3D",
-  "version": "3.0.7",
+  "version": "3.1.0",
   "samples": [
     {
       "displayName": "Samples",
