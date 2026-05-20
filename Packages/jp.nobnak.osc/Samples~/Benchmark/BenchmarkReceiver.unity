@@ -370,7 +370,7 @@ MonoBehaviour:
   presets:
     port: 10000
     duration: 3
-    useStringCaching: 1
+    useStringCaching: 0
     messageSize: 0
     retainCount: 50000
 --- !u!4 &1234567892

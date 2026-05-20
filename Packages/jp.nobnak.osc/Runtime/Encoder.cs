@@ -46,7 +46,8 @@ namespace Osc2 {
 		}
 
 		public byte[] Encode () {
-			var lenAddress = (Path.Length + 4) & ~3;
+			var pathBytes = Encoding.UTF8.GetByteCount (Path);
+			var lenAddress = (pathBytes + 4) & ~3;
 			var lenTags = (Params.Count + 5) & ~3;
 			var lenDatas = 0;
 			foreach (var p in Params)
