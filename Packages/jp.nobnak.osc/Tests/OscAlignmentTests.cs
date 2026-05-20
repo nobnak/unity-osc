@@ -30,12 +30,12 @@ namespace Osc2.Tests {
             Assert.That(msg.data[0], Is.EqualTo(42));
         }
 
-        [TestCase("", 4)]
-        [TestCase("a", 4)]
-        [TestCase("ab", 4)]
-        [TestCase("abc", 4)]
-        [TestCase("abcd", 8)]
-        [TestCase("abcde", 8)]
+        [TestCase(0, 4)]
+        [TestCase(1, 4)]
+        [TestCase(2, 4)]
+        [TestCase(3, 4)]
+        [TestCase(4, 8)]
+        [TestCase(5, 8)]
         public void StringArg_PaddingSize(int charLen, int expectedPaddedBytes) {
             var s = new string('x', charLen);
             var contentBytes = Encoding.UTF8.GetByteCount(s);
@@ -46,7 +46,8 @@ namespace Osc2.Tests {
             var data = new Encoder("/t").Add(s).Encode();
             var argOffset = pathLen + tagLen;
 
-            Assert.That(data[argOffset], Is.EqualTo((byte)'x'));
+            if (charLen > 0)
+                Assert.That(data[argOffset], Is.EqualTo((byte)'x'));
             Assert.That(data[argOffset + contentBytes], Is.EqualTo(0));
             for (var i = 1; i < expectedPaddedBytes - contentBytes; i++)
                 Assert.That(data[argOffset + contentBytes + i], Is.EqualTo(0));
